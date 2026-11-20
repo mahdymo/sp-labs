@@ -1,0 +1,32 @@
+---
+# ==============================================================================
+# Role: ns3 — Build and deploy ns-3 network simulator
+# ==============================================================================
+
+- name: Ensure 6G lab files are synced
+  synchronize:
+    src: "{{ playbook_dir }}/../../6g-lab/"
+    dest: "{{ sp_labs_root }}/6g-lab/"
+    recursive: yes
+
+- name: Create ns-3 results directory
+  file:
+    path: "{{ sp_labs_root }}/6g-lab/ns3/results"
+    state: directory
+    mode: '0755'
+
+- name: Build ns-3 Docker image (this takes ~20 minutes on first run)
+  command: >
+    docker compose -f {{ sp_labs_root }}/6g-lab/docker-compose.yml
+    build ns3
+  register: ns3_build
+  changed_when: "'Successfully built' in ns3_build.stdout or 'exporting to image' in ns3_build.stdout"
+
+- name: Verify ns-3 image exists
+  command: docker images sp-labs/ns3 --format "{{ '{{' }}.Repository{{ '}}' }}:{{ '{{' }}.Tag{{ '}}' }}"
+  register: ns3_image
+  changed_when: false
+
+- name: Display ns-3 build status
+  debug:
+    msg: "ns-3 image ready: {{ ns3_image.stdout }}"

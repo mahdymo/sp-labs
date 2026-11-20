@@ -1,0 +1,12 @@
+# ==============================================================================
+# SP-Labs — 5G Lab Playbook
+# ==============================================================================
+---
+- name: Deploy 5G Lab (Open5GS + UERANSIM)
+  hosts: fiveg
+  become: yes
+  roles:
+    - common
+    - docker
+    - open5gs
+    - ueransim

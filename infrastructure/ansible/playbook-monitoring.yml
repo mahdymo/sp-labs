@@ -1,0 +1,11 @@
+# ==============================================================================
+# SP-Labs — Monitoring Playbook
+# ==============================================================================
+---
+- name: Deploy Monitoring (Prometheus + Grafana)
+  hosts: mon
+  become: yes
+  roles:
+    - common
+    - docker
+    - monitoring

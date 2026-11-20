@@ -1,0 +1,50 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes / runtime data
+**/data/
+**/logs/
+*.log
+
+# Environment secrets
+.env
+!.env.example
+
+# Ansible vault password (NEVER commit)
+.vault-pass
+infrastructure/ansible/.vault-pass
+
+# SSH keys (should never be in repo)
+*.pem
+id_rsa
+id_ed25519
+sp-labs-key
+sp-labs-key.pub
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+venv/
+.venv/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Vagrant
+.vagrant/
+
+# Build artifacts
+*.tar.gz
+*.zip

@@ -1,0 +1,37 @@
+---
+# ==============================================================================
+# Role: ueransim — Deploy UERANSIM gNB + UE via Docker Compose
+# ==============================================================================
+
+- name: Pull UERANSIM image
+  command: docker pull openverso/ueransim:3.2.6
+  changed_when: false
+
+- name: Start UERANSIM gNB
+  command: >
+    docker compose -f {{ sp_labs_root }}/5g-lab/docker-compose.yml
+    --env-file {{ sp_labs_root }}/.env
+    up -d gnb
+
+- name: Wait for gNB to connect to AMF
+  pause:
+    seconds: 5
+
+- name: Start UERANSIM UE
+  command: >
+    docker compose -f {{ sp_labs_root }}/5g-lab/docker-compose.yml
+    --env-file {{ sp_labs_root }}/.env
+    up -d ue
+
+- name: Wait for UE registration
+  pause:
+    seconds: 10
+
+- name: Verify UE registration
+  command: docker logs ue
+  register: ue_logs
+  changed_when: false
+
+- name: Display UE status
+  debug:
+    msg: "{{ ue_logs.stdout_lines[-10:] }}"

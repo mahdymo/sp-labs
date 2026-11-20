@@ -1,0 +1,39 @@
+---
+# ==============================================================================
+# Role: oran-ric — Deploy O-RAN Near-RT RIC components
+# ==============================================================================
+
+- name: Ensure 6G lab files are synced
+  synchronize:
+    src: "{{ playbook_dir }}/../../6g-lab/"
+    dest: "{{ sp_labs_root }}/6g-lab/"
+    recursive: yes
+
+- name: Pull O-RAN RIC images
+  command: docker pull {{ item }}
+  loop:
+    - redis:7-alpine
+  changed_when: false
+
+- name: Pull O-RAN SC images (may require registry access)
+  command: docker pull {{ item }}
+  loop:
+    - nexus3.o-ran-sc.org:10002/o-ran-sc/ric-plt-e2:latest
+    - nexus3.o-ran-sc.org:10002/o-ran-sc/ric-plt-e2mgr:latest
+  ignore_errors: yes
+  register: oran_pull
+
+- name: Warn if O-RAN SC images unavailable
+  debug:
+    msg: >
+      WARNING: O-RAN SC images could not be pulled.
+      You may need to register at https://nexus3.o-ran-sc.org
+      and configure Docker credentials for the O-RAN SC registry.
+  when: oran_pull.results | selectattr('failed', 'equalto', true) | list | length > 0
+
+- name: Start O-RAN RIC components
+  command: >
+    docker compose -f {{ sp_labs_root }}/6g-lab/docker-compose.yml
+    --env-file {{ sp_labs_root }}/.env
+    up -d oran-ric-db oran-ric-e2term oran-ric-e2mgr
+  when: oran_pull.results | selectattr('failed', 'equalto', true) | list | length == 0

@@ -1,0 +1,120 @@
+# ==============================================================================
+# SP-Labs 6G Lab — Docker Compose
+# NVIDIA Sionna + ns-3 + O-RAN Near-RT RIC
+# ==============================================================================
+
+networks:
+  sixg:
+    name: sp-labs-6g
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.33.60.0/24
+  mgmt:
+    name: sp-labs-mgmt
+    external: true
+
+services:
+  # ============================================================================
+  # NVIDIA Sionna — 6G PHY-Layer Simulator (GPU Required)
+  # ============================================================================
+  sionna:
+    build:
+      context: ./sionna
+      dockerfile: Dockerfile
+    image: sp-labs/sionna:latest
+    container_name: sionna
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./sionna/notebooks:/workspace/notebooks
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      sixg:
+        ipv4_address: 10.33.60.10
+    profiles:
+      - gpu
+
+  # ============================================================================
+  # Sionna CPU-only fallback (no GPU required)
+  # ============================================================================
+  sionna-cpu:
+    build:
+      context: ./sionna
+      dockerfile: Dockerfile
+    image: sp-labs/sionna:latest
+    container_name: sionna-cpu
+    restart: unless-stopped
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./sionna/notebooks:/workspace/notebooks
+    environment:
+      - CUDA_VISIBLE_DEVICES=""
+    networks:
+      sixg:
+        ipv4_address: 10.33.60.11
+    profiles:
+      - cpu
+
+  # ============================================================================
+  # ns-3 — Network Simulator with NR Module
+  # ============================================================================
+  ns3:
+    build:
+      context: ./ns3
+      dockerfile: Dockerfile
+    image: sp-labs/ns3:latest
+    container_name: ns3
+    restart: "no"
+    volumes:
+      - ./ns3/results:/results
+    networks:
+      sixg:
+        ipv4_address: 10.33.60.20
+
+  # ============================================================================
+  # O-RAN Near-RT RIC — RAN Intelligent Controller
+  # ============================================================================
+  oran-ric-db:
+    image: redis:7-alpine
+    container_name: oran-ric-db
+    restart: unless-stopped
+    networks:
+      sixg:
+        ipv4_address: 10.33.60.30
+
+  oran-ric-e2term:
+    image: nexus3.o-ran-sc.org:10002/o-ran-sc/ric-plt-e2:latest
+    container_name: oran-ric-e2term
+    restart: unless-stopped
+    environment:
+      - RMR_RTG_SVC=oran-ric-rtmgr:3800
+      - RMR_SEED_RT=/opt/e2/dockerRouter.txt
+    networks:
+      sixg:
+        ipv4_address: 10.33.60.31
+    depends_on:
+      - oran-ric-db
+
+  oran-ric-e2mgr:
+    image: nexus3.o-ran-sc.org:10002/o-ran-sc/ric-plt-e2mgr:latest
+    container_name: oran-ric-e2mgr
+    restart: unless-stopped
+    environment:
+      - RMR_RTG_SVC=oran-ric-rtmgr:3800
+    ports:
+      - "3800:3800"
+    networks:
+      sixg:
+        ipv4_address: 10.33.60.32
+    depends_on:
+      - oran-ric-db
+      - oran-ric-e2term

@@ -1,0 +1,75 @@
+---
+# ==============================================================================
+# Role: sionna — Deploy NVIDIA Sionna 6G PHY Simulator
+# ==============================================================================
+
+- name: Sync 6G lab files
+  synchronize:
+    src: "{{ playbook_dir }}/../../6g-lab/"
+    dest: "{{ sp_labs_root }}/6g-lab/"
+    recursive: yes
+
+- name: Check for NVIDIA GPU
+  command: lspci
+  register: lspci_output
+  changed_when: false
+
+- name: Set GPU availability fact
+  set_fact:
+    has_nvidia_gpu: "{{ 'NVIDIA' in lspci_output.stdout }}"
+
+- name: Install NVIDIA Container Toolkit (if GPU present)
+  when: has_nvidia_gpu
+  block:
+    - name: Add NVIDIA Container Toolkit GPG key
+      shell: >
+        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey |
+        gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+
+    - name: Add NVIDIA Container Toolkit repo
+      shell: >
+        curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list |
+        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' |
+        tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+      args:
+        creates: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+    - name: Install NVIDIA Container Toolkit
+      apt:
+        name: nvidia-container-toolkit
+        state: present
+        update_cache: yes
+
+    - name: Configure Docker runtime for NVIDIA
+      command: nvidia-ctk runtime configure --runtime=docker
+
+    - name: Restart Docker for NVIDIA runtime
+      systemd:
+        name: docker
+        state: restarted
+
+- name: Build Sionna image
+  command: >
+    docker compose -f {{ sp_labs_root }}/6g-lab/docker-compose.yml
+    build sionna
+  when: has_nvidia_gpu
+
+- name: Start Sionna (GPU mode)
+  command: >
+    docker compose -f {{ sp_labs_root }}/6g-lab/docker-compose.yml
+    --profile gpu up -d sionna
+  when: has_nvidia_gpu
+
+- name: Start Sionna (CPU-only mode)
+  command: >
+    docker compose -f {{ sp_labs_root }}/6g-lab/docker-compose.yml
+    --profile cpu up -d sionna-cpu
+  when: not has_nvidia_gpu
+
+- name: Display Sionna access info
+  debug:
+    msg: >
+      Sionna Jupyter Notebook: http://{{ ansible_host }}:8888
+      Token: splabs

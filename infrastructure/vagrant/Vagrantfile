@@ -1,0 +1,117 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# ==============================================================================
+# SP-Labs — Multi-VM Vagrant Configuration
+#
+# Provisions the full lab environment across dedicated VMs.
+# Usage:
+#   vagrant up                  # Start all VMs
+#   vagrant up vm-5g-core       # Start specific VM
+#   vagrant ssh vm-5g-core      # SSH into a VM
+#   vagrant destroy -f          # Tear down everything
+# ==============================================================================
+
+VAGRANTFILE_API_VERSION = "2"
+
+# --- VM Definitions ---
+VMS = [
+  {
+    name:    "vm-5g-core",
+    ip:      "192.168.56.10",
+    cpus:    4,
+    memory:  8192,
+    disk:    "50GB",
+    role:    "5G Core (Open5GS + MongoDB)"
+  },
+  {
+    name:    "vm-ran-sim",
+    ip:      "192.168.56.20",
+    cpus:    2,
+    memory:  4096,
+    disk:    "30GB",
+    role:    "UERANSIM (gNB + UEs)"
+  },
+  {
+    name:    "vm-sionna",
+    ip:      "192.168.56.40",
+    cpus:    8,
+    memory:  32768,
+    disk:    "100GB",
+    role:    "NVIDIA Sionna (6G PHY)"
+  },
+  {
+    name:    "vm-ns3",
+    ip:      "192.168.56.50",
+    cpus:    4,
+    memory:  16384,
+    disk:    "50GB",
+    role:    "ns-3 Network Simulator"
+  },
+  {
+    name:    "vm-oran",
+    ip:      "192.168.56.60",
+    cpus:    4,
+    memory:  8192,
+    disk:    "40GB",
+    role:    "O-RAN Near-RT RIC"
+  },
+  {
+    name:    "vm-monitor",
+    ip:      "192.168.56.70",
+    cpus:    2,
+    memory:  4096,
+    disk:    "100GB",
+    role:    "Prometheus + Grafana"
+  }
+]
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "bento/ubuntu-22.04"
+  config.vm.box_check_update = true
+
+  # Shared repo folder
+  config.vm.synced_folder "../../", "/opt/sp-labs", type: "rsync",
+    rsync__exclude: [".git/", "*.vagrant/", "node_modules/"]
+
+  VMS.each do |vm_def|
+    config.vm.define vm_def[:name] do |node|
+      node.vm.hostname = vm_def[:name]
+      node.vm.network "private_network", ip: vm_def[:ip]
+
+      node.vm.provider "virtualbox" do |vb|
+        vb.name   = "sp-labs-#{vm_def[:name]}"
+        vb.cpus   = vm_def[:cpus]
+        vb.memory = vm_def[:memory]
+        vb.gui    = false
+        vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      end
+
+      # Base provisioning for all VMs
+      node.vm.provision "shell", inline: <<-SHELL
+        echo "=== SP-Labs: Provisioning #{vm_def[:name]} (#{vm_def[:role]}) ==="
+        cd /opt/sp-labs
+        chmod +x infrastructure/scripts/bootstrap.sh
+        chmod +x infrastructure/scripts/bootstrap-components.sh
+      SHELL
+
+      # Role-specific provisioning
+      case vm_def[:name]
+      when "vm-5g-core", "vm-ran-sim"
+        node.vm.provision "shell", inline: <<-SHELL
+          cd /opt/sp-labs
+          sudo ./infrastructure/scripts/bootstrap.sh --5g
+        SHELL
+      when "vm-sionna", "vm-ns3", "vm-oran"
+        node.vm.provision "shell", inline: <<-SHELL
+          cd /opt/sp-labs
+          sudo ./infrastructure/scripts/bootstrap.sh --6g
+        SHELL
+      when "vm-monitor"
+        node.vm.provision "shell", inline: <<-SHELL
+          cd /opt/sp-labs
+          sudo ./infrastructure/scripts/bootstrap.sh --monitor
+        SHELL
+      end
+    end
+  end
+end

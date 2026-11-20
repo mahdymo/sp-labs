@@ -1,0 +1,73 @@
+# ==============================================================================
+# SP-Labs — O-RAN Near-RT RIC (Standalone)
+#
+# This is for deploying the O-RAN RIC components independently.
+# When deploying the full 6G lab, use the parent 6g-lab/docker-compose.yml.
+#
+# O-RAN SC images require access to:
+#   https://nexus3.o-ran-sc.org:10002
+#
+# Registration: https://wiki.o-ran-sc.org/
+# ==============================================================================
+
+networks:
+  ric:
+    name: sp-labs-ric
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.33.61.0/24
+
+services:
+  # --- Redis (RIC database) ---
+  ric-db:
+    image: redis:7-alpine
+    container_name: ric-db
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      ric:
+        ipv4_address: 10.33.61.10
+
+  # --- E2 Termination ---
+  ric-e2term:
+    image: nexus3.o-ran-sc.org:10002/o-ran-sc/ric-plt-e2:latest
+    container_name: ric-e2term
+    restart: unless-stopped
+    environment:
+      - RMR_SEED_RT=/opt/e2/dockerRouter.txt
+    ports:
+      - "36422:36422/sctp"
+    networks:
+      ric:
+        ipv4_address: 10.33.61.20
+    depends_on:
+      - ric-db
+
+  # --- E2 Manager ---
+  ric-e2mgr:
+    image: nexus3.o-ran-sc.org:10002/o-ran-sc/ric-plt-e2mgr:latest
+    container_name: ric-e2mgr
+    restart: unless-stopped
+    ports:
+      - "3800:3800"
+    networks:
+      ric:
+        ipv4_address: 10.33.61.30
+    depends_on:
+      - ric-db
+      - ric-e2term
+
+  # --- A1 Mediator ---
+  ric-a1mediator:
+    image: nexus3.o-ran-sc.org:10002/o-ran-sc/ric-plt-a1:latest
+    container_name: ric-a1mediator
+    restart: unless-stopped
+    ports:
+      - "10000:10000"
+    networks:
+      ric:
+        ipv4_address: 10.33.61.40
+    depends_on:
+      - ric-db

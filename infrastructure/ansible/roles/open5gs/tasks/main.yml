@@ -1,0 +1,49 @@
+---
+# ==============================================================================
+# Role: open5gs — Deploy Open5GS 5G Core via Docker Compose
+# ==============================================================================
+
+- name: Create SP-Labs directory
+  file:
+    path: "{{ sp_labs_root }}"
+    state: directory
+    mode: '0755'
+
+- name: Sync 5G lab files
+  synchronize:
+    src: "{{ playbook_dir }}/../../5g-lab/"
+    dest: "{{ sp_labs_root }}/5g-lab/"
+    recursive: yes
+
+- name: Copy .env file
+  copy:
+    src: "{{ playbook_dir }}/../../.env.example"
+    dest: "{{ sp_labs_root }}/.env"
+    force: no
+
+- name: Pull Open5GS images
+  command: docker pull {{ item }}
+  loop:
+    - mongo:6.0
+    - openverso/open5gs:2.7.2
+  changed_when: false
+
+- name: Start Open5GS 5G Core
+  command: >
+    docker compose -f {{ sp_labs_root }}/5g-lab/docker-compose.yml
+    --env-file {{ sp_labs_root }}/.env
+    up -d
+    mongodb nrf scp amf smf upf ausf udm udr pcf nssf bsf webui
+
+- name: Wait for MongoDB to be ready
+  command: >
+    docker exec mongodb mongosh --quiet --eval "db.adminCommand('ping')"
+  register: mongo_ping
+  retries: 10
+  delay: 3
+  until: mongo_ping.rc == 0
+
+- name: Register default subscriber
+  script: "{{ playbook_dir }}/../../infrastructure/scripts/register-subscriber.sh"
+  args:
+    executable: /bin/bash

@@ -1,0 +1,47 @@
+---
+# ==============================================================================
+# Role: monitoring — Deploy Prometheus + Grafana via Docker Compose
+# ==============================================================================
+
+- name: Sync monitoring files
+  synchronize:
+    src: "{{ playbook_dir }}/../../monitoring/"
+    dest: "{{ sp_labs_root }}/monitoring/"
+    recursive: yes
+
+- name: Pull monitoring images
+  command: docker pull {{ item }}
+  loop:
+    - prom/prometheus:v2.55.0
+    - grafana/grafana:11.3.0
+    - prom/node-exporter:v1.8.2
+  changed_when: false
+
+- name: Ensure mgmt network exists
+  command: docker network inspect sp-labs-mgmt
+  register: mgmt_net
+  ignore_errors: yes
+  changed_when: false
+
+- name: Create mgmt network if missing
+  command: >
+    docker network create
+    --driver bridge
+    --subnet 10.33.38.0/24
+    sp-labs-mgmt
+  when: mgmt_net.rc != 0
+
+- name: Start monitoring stack
+  command: >
+    docker compose -f {{ sp_labs_root }}/monitoring/docker-compose.yml
+    --env-file {{ sp_labs_root }}/.env
+    up -d
+
+- name: Wait for Grafana to be ready
+  uri:
+    url: http://localhost:3000/api/health
+    status_code: 200
+  register: grafana_health
+  retries: 10
+  delay: 5
+  until: grafana_health.status == 200

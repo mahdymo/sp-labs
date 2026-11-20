@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: 'SP-Labs Dashboards'
+    orgId: 1
+    folder: 'SP-Labs'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

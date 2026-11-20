@@ -1,0 +1,15 @@
+# ==============================================================================
+# SP-Labs — Master Ansible Playbook
+# Deploys the full environment: common → docker → 5G → 6G → monitoring
+# ==============================================================================
+---
+- name: SP-Labs Full Deployment
+  hosts: all
+  become: yes
+  roles:
+    - common
+    - docker
+
+- import_playbook: playbook-5g.yml
+- import_playbook: playbook-6g.yml
+- import_playbook: playbook-monitoring.yml

@@ -1,0 +1,78 @@
+# ==============================================================================
+# SP-Labs — Ansible Group Variables (all hosts)
+# ==============================================================================
+# These variables apply to ALL hosts in the inventory.
+# Override per-group in group_vars/<group>.yml or per-host in host_vars/<host>.yml.
+#
+# For secrets (passwords, keys), use Ansible Vault:
+#   ansible-vault create group_vars/vault.yml
+#   Then reference: grafana_admin_password: "{{ vault_grafana_admin_password }}"
+# ==============================================================================
+
+# --- Deployment Paths ---
+sp_labs_root: /opt/sp-labs
+sp_labs_repo: "https://github.com/<your-org>/sp-labs.git"
+sp_labs_branch: main
+
+# --- System ---
+timezone: UTC
+ansible_python_interpreter: /usr/bin/python3
+
+# --- Docker ---
+docker_edition: ce
+docker_compose_version: v2
+
+# --- 5G Core (Open5GS) ---
+open5gs_version: "2.7.2"
+open5gs_image: "openverso/open5gs:{{ open5gs_version }}"
+mongodb_version: "6.0"
+mongodb_image: "mongo:{{ mongodb_version }}"
+
+# PLMN — Test network
+mcc: "999"
+mnc: "70"
+tac: 1
+
+# Subscriber defaults (override with vault for production-like setups)
+subscriber_imsi: "999700000000001"
+subscriber_key: "465B5CE8B199B49FAA5F0A2EE238A6BC"
+subscriber_opc: "E8ED289DEBA952E4283B54E88E6183CA"
+subscriber_apn: "internet"
+subscriber_sst: 1
+subscriber_sd: "0x000001"
+
+# --- UERANSIM ---
+ueransim_version: "3.2.6"
+ueransim_image: "openverso/ueransim:{{ ueransim_version }}"
+gnb_id: 1
+num_ues: 5
+
+# --- 6G Lab ---
+sionna_version: "0.19.1"
+ns3_version: "3.42"
+
+# --- Monitoring ---
+prometheus_version: "v2.55.0"
+grafana_version: "11.3.0"
+node_exporter_version: "v1.8.2"
+grafana_admin_password: "sp-labs-admin"
+# For vault: grafana_admin_password: "{{ vault_grafana_admin_password }}"
+
+# --- Networking (Docker bridge subnets) ---
+net_sbi: "10.33.33.0/24"
+net_n2: "10.33.34.0/24"
+net_n3: "10.33.35.0/24"
+net_n4: "10.33.36.0/24"
+net_n6: "10.33.37.0/24"
+net_mgmt: "10.33.38.0/24"
+
+# UE IP pool (routed via UPF)
+ue_pool: "10.45.0.0/16"
+
+# --- Multi-VM IPs ---
+# These are used by NF configs that need to reference other VMs.
+# In single-host mode these are Docker container IPs (10.33.x.x).
+# In multi-VM mode, set these to the actual VM management IPs.
+vm_5g_core_ip: "{{ hostvars[groups['core_5g'][0]]['ansible_host'] | default('127.0.0.1') }}"
+vm_ran_sim_ip: "{{ hostvars[groups['ran_sim'][0]]['ansible_host'] | default('127.0.0.1') }}"
+vm_monitor_ip: "{{ hostvars[groups['monitoring'][0]]['ansible_host'] | default('127.0.0.1') }}"

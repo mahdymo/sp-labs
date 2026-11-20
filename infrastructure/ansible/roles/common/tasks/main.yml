@@ -1,0 +1,81 @@
+---
+# ==============================================================================
+# Role: common — Base system configuration for all SP-Labs hosts
+# ==============================================================================
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Install base packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+      - git
+      - make
+      - jq
+      - net-tools
+      - iputils-ping
+      - iproute2
+      - tcpdump
+      - wget
+      - unzip
+      - python3-pip
+    state: present
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Load TUN kernel module
+  modprobe:
+    name: tun
+    state: present
+
+- name: Persist TUN module on boot
+  copy:
+    content: "tun\n"
+    dest: /etc/modules-load.d/tun.conf
+
+- name: Load SCTP kernel module
+  modprobe:
+    name: sctp
+    state: present
+  ignore_errors: yes
+
+- name: Set timezone
+  timezone:
+    name: "{{ timezone | default('UTC') }}"
+
+- name: Configure NAT for UE traffic
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    source: 10.45.0.0/16
+    out_interface: "!ogstun"
+    jump: MASQUERADE
+    state: present
+
+- name: Allow forwarding from ogstun
+  iptables:
+    chain: FORWARD
+    in_interface: ogstun
+    jump: ACCEPT
+    state: present
+
+- name: Allow established traffic back to ogstun
+  iptables:
+    chain: FORWARD
+    out_interface: ogstun
+    ctstate: RELATED,ESTABLISHED
+    jump: ACCEPT
+    state: present
