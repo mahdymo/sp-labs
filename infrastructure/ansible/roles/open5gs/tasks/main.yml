@@ -26,6 +26,7 @@
   loop:
     - mongo:6.0
     - openverso/open5gs:2.7.0
+    - gradiant/open5gs-webui:2.7.1
   changed_when: false
 
 - name: Start Open5GS 5G Core

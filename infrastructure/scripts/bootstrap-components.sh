@@ -10,6 +10,7 @@ if $INSTALL_5G; then
   docker pull mongo:6.0
   docker pull openverso/open5gs:2.7.0
   docker pull openverso/ueransim:3.2.6
+  docker pull gradiant/open5gs-webui:2.7.1
   log "5G images ready"
 fi
 

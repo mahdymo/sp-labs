@@ -1,4 +1,6 @@
 logger:
+  file:
+    path: /opt/open5gs/var/log/open5gs/nrf.log
   level: info
 
 global:
@@ -12,5 +14,5 @@ nrf:
         mnc: 70
   sbi:
     server:
-      - address: 0.0.0.0
+      - dev: eth0
         port: 7777

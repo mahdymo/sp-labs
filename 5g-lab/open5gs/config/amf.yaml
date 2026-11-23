@@ -1,4 +1,6 @@
 logger:
+  file:
+    path: /opt/open5gs/var/log/open5gs/amf.log
   level: info
 
 global:
@@ -8,18 +10,17 @@ global:
 amf:
   sbi:
     server:
-      - address: 0.0.0.0
+      - dev: eth0
         port: 7777
     client:
       scp:
         - uri: http://scp:7777
   ngap:
     server:
-      - address: 0.0.0.0
-        port: 38412
+      - dev: eth1
   metrics:
     server:
-      - address: 0.0.0.0
+      - dev: eth0
         port: 9090
   guami:
     - plmn_id:

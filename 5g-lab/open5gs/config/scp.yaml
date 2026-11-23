@@ -1,10 +1,12 @@
 logger:
+  file:
+    path: /opt/open5gs/var/log/open5gs/scp.log
   level: info
 
 scp:
   sbi:
     server:
-      - address: 0.0.0.0
+      - dev: eth0
         port: 7777
     client:
       nrf:

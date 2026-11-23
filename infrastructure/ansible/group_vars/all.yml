@@ -25,6 +25,7 @@ docker_compose_version: v2
 # --- 5G Core (Open5GS) ---
 open5gs_version: "2.7.0"
 open5gs_image: "openverso/open5gs:{{ open5gs_version }}"
+webui_image: "gradiant/open5gs-webui:2.7.1"
 mongodb_version: "6.0"
 mongodb_image: "mongo:{{ mongodb_version }}"
 
@@ -39,7 +40,6 @@ subscriber_key: "465B5CE8B199B49FAA5F0A2EE238A6BC"
 subscriber_opc: "E8ED289DEBA952E4283B54E88E6183CA"
 subscriber_apn: "internet"
 subscriber_sst: 1
-subscriber_sd: "0x000001"
 
 # --- UERANSIM ---
 ueransim_version: "3.2.6"

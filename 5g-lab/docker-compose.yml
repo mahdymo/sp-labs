@@ -1,6 +1,15 @@
 # ==============================================================================
 # SP-Labs 5G Lab — Docker Compose
 # Open5GS 5G SA Core + UERANSIM (gNB + UE)
+#
+# Image references:
+#   openverso/open5gs:2.7.0           — Gradiant's Open5GS (all NFs share image)
+#   openverso/ueransim:3.2.6          — Gradiant's UERANSIM (gNB + UE)
+#   gradiant/open5gs-webui:2.7.1      — Separate WebUI image (Node.js)
+#
+# Key: the openverso images have ENTRYPOINT scripts that do env setup,
+# tun device creation (UPF), envsubst (UERANSIM), and sleep-for-DNS (NRF/SCP).
+# We pass the NF daemon name as CMD. The entrypoint runs: exec $@
 # ==============================================================================
 
 networks:
@@ -67,6 +76,10 @@ services:
     container_name: nrf
     restart: unless-stopped
     command: open5gs-nrfd
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - ./open5gs/config/nrf.yaml:/opt/open5gs/etc/open5gs/nrf.yaml
     networks:
@@ -85,6 +98,10 @@ services:
     container_name: scp
     restart: unless-stopped
     command: open5gs-scpd
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - ./open5gs/config/scp.yaml:/opt/open5gs/etc/open5gs/scp.yaml
     networks:
@@ -101,6 +118,10 @@ services:
     container_name: amf
     restart: unless-stopped
     command: open5gs-amfd
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - ./open5gs/config/amf.yaml:/opt/open5gs/etc/open5gs/amf.yaml
     networks:
@@ -121,6 +142,10 @@ services:
     container_name: smf
     restart: unless-stopped
     command: open5gs-smfd
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - ./open5gs/config/smf.yaml:/opt/open5gs/etc/open5gs/smf.yaml
     networks:
@@ -142,6 +167,10 @@ services:
     restart: unless-stopped
     command: open5gs-upfd
     privileged: true
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     cap_add:
       - NET_ADMIN
     devices:
@@ -170,8 +199,11 @@ services:
     container_name: ausf
     restart: unless-stopped
     command: open5gs-ausfd
-    volumes:
-      - ./open5gs/config/ausf.yaml:/opt/open5gs/etc/open5gs/ausf.yaml
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # No custom config needed — image default binds eth0:7777 → SCP
     networks:
       sbi:
         ipv4_address: 10.33.33.15
@@ -183,8 +215,11 @@ services:
     container_name: udm
     restart: unless-stopped
     command: open5gs-udmd
-    volumes:
-      - ./open5gs/config/udm.yaml:/opt/open5gs/etc/open5gs/udm.yaml
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # No custom config needed — image default binds eth0:7777 → SCP + hnet keys
     networks:
       sbi:
         ipv4_address: 10.33.33.16
@@ -196,6 +231,10 @@ services:
     container_name: udr
     restart: unless-stopped
     command: open5gs-udrd
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
       - ./open5gs/config/udr.yaml:/opt/open5gs/etc/open5gs/udr.yaml
     networks:
@@ -213,7 +252,12 @@ services:
     container_name: pcf
     restart: unless-stopped
     command: open5gs-pcfd
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
+      # Custom config needed for db_uri → mongodb (image default uses localhost)
       - ./open5gs/config/pcf.yaml:/opt/open5gs/etc/open5gs/pcf.yaml
     networks:
       sbi:
@@ -227,8 +271,11 @@ services:
     container_name: nssf
     restart: unless-stopped
     command: open5gs-nssfd
-    volumes:
-      - ./open5gs/config/nssf.yaml:/opt/open5gs/etc/open5gs/nssf.yaml
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # No custom config needed — image default binds eth0:7777 → SCP + NSI → NRF
     networks:
       sbi:
         ipv4_address: 10.33.33.19
@@ -240,8 +287,11 @@ services:
     container_name: bsf
     restart: unless-stopped
     command: open5gs-bsfd
-    volumes:
-      - ./open5gs/config/bsf.yaml:/opt/open5gs/etc/open5gs/bsf.yaml
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # No custom config needed — image default binds eth0:7777 → SCP
     networks:
       sbi:
         ipv4_address: 10.33.33.20
@@ -252,14 +302,12 @@ services:
   # 5G Core — WebUI (Subscriber Management)
   # ============================================================================
   webui:
-    image: openverso/open5gs:2.7.0
+    image: gradiant/open5gs-webui:2.7.1
     container_name: webui
     restart: unless-stopped
-    command: node /opt/open5gs/webui/server/index.js
     environment:
       - DB_URI=mongodb://mongodb:27017/open5gs
       - HOSTNAME=0.0.0.0
-      - PORT=9999
     ports:
       - "9999:9999"
     networks:
@@ -272,14 +320,24 @@ services:
 
   # ============================================================================
   # UERANSIM — gNodeB (5G Base Station Simulator)
+  # The entrypoint expects "gnb" as first arg, resolves AMF via env/DNS,
+  # runs envsubst on /etc/ueransim/gnb.yaml template, then exec nr-gnb.
   # ============================================================================
   gnb:
     image: openverso/ueransim:3.2.6
     container_name: gnb
     restart: unless-stopped
-    command: nr-gnb -c /etc/ueransim/gnb.yaml
-    volumes:
-      - ./ueransim/config/gnb.yaml:/etc/ueransim/gnb.yaml
+    command: gnb
+    environment:
+      - MCC=999
+      - MNC=70
+      - TAC=1
+      - SST=1
+      - SD=0xFFFFFF
+      - AMF_IP=10.33.34.12
+      - N2_IFACE=eth0
+      - N3_IFACE=eth1
+      - RADIO_IFACE=eth2
     cap_add:
       - NET_ADMIN
     networks:
@@ -295,14 +353,25 @@ services:
 
   # ============================================================================
   # UERANSIM — UE (User Equipment Simulator)
+  # The entrypoint expects "ue" as first arg, resolves gNB via env/DNS,
+  # runs envsubst on /etc/ueransim/ue.yaml template, then exec nr-ue.
   # ============================================================================
   ue:
     image: openverso/ueransim:3.2.6
     container_name: ue
     restart: unless-stopped
-    command: nr-ue -c /etc/ueransim/ue.yaml
-    volumes:
-      - ./ueransim/config/ue.yaml:/etc/ueransim/ue.yaml
+    command: ue
+    environment:
+      - MCC=999
+      - MNC=70
+      - MSISDN=0000000001
+      - KEY=465B5CE8B199B49FAA5F0A2EE238A6BC
+      - OP=E8ED289DEBA952E4283B54E88E6183CA
+      - OP_TYPE=OPC
+      - SST=1
+      - SD=0xFFFFFF
+      - APN=internet
+      - GNB_IP=10.33.38.100
     cap_add:
       - NET_ADMIN
     devices:
