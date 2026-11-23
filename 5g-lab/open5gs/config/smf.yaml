@@ -40,6 +40,3 @@ smf:
     - 2001:4860:4860::8888
     - 2001:4860:4860::8844
   mtu: 1400
-  ctf:
-    enabled: auto
-  freeDiameter: /opt/open5gs/etc/freeDiameter/smf.conf
