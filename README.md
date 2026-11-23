@@ -72,7 +72,8 @@ make test-6g    # 6G simulation environment check
 
 | Document | Description |
 |----------|-------------|
-| [PREREQUISITES.md](docs/PREREQUISITES.md) | **Start here** — what to gather, SSH keys, secrets, pre-flight |
+| [LAB_GUIDE.md](docs/LAB_GUIDE.md) | **📘 Complete lab guide** — deploy, verify, operate, troubleshoot |
+| [PREREQUISITES.md](docs/PREREQUISITES.md) | What to gather, SSH keys, secrets, pre-flight |
 | [SPEC.md](docs/SPEC.md) | Full specification — VM requirements, versions, network plan |
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Detailed architecture and data flows |
 | [NETWORKING.md](docs/NETWORKING.md) | IP addressing, subnets, interface mapping |
