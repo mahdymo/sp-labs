@@ -3,7 +3,7 @@
 > **Audience:** Engineers deploying, operating, and troubleshooting the SP-Labs
 > 5G & 6G telco lab environment.
 >
-> **Last updated:** 2026-11-23 · **Spec version:** 1.0
+> **Last updated:** 2026-11-23 · **Spec version:** 1.1
 
 ---
 
@@ -26,9 +26,10 @@
 15. [Networking Reference](#15-networking-reference)
 16. [Troubleshooting](#16-troubleshooting)
 17. [Lessons Learned & Gotchas](#17-lessons-learned--gotchas)
-18. [Appendix A — Make Targets](#appendix-a--make-targets)
-19. [Appendix B — Container Reference](#appendix-b--container-reference)
-20. [Appendix C — Config File Reference](#appendix-c--config-file-reference)
+18. [Connecting an External F5 BIG-IP](#18-connecting-an-external-f5-big-ip)
+19. [Appendix A — Make Targets](#appendix-a--make-targets)
+20. [Appendix B — Container Reference](#appendix-b--container-reference)
+21. [Appendix C — Config File Reference](#appendix-c--config-file-reference)
 
 ---
 
@@ -194,6 +195,9 @@ sp-labs/
 │   └── grafana/                     # Provisioning + dashboards
 ├── infrastructure/                  # ── Automation ──
 │   ├── scripts/                     # bootstrap, preflight, test, register
+│   │   ├── test-5g.sh               # E2E 6-phase validation
+│   │   ├── generate-traffic.sh      # Sustained traffic for Grafana
+│   │   └── register-subscriber.sh   # MongoDB subscriber insert
 │   ├── ansible/                     # Multi-VM provisioning
 │   └── vagrant/                     # Local multi-VM dev
 ├── docs/                            # ── Documentation ──
@@ -394,14 +398,16 @@ This auto-detects GPU availability:
 make test-5g
 ```
 
-This runs `infrastructure/scripts/test-5g.sh` which validates four phases:
+This runs `infrastructure/scripts/test-5g.sh` which validates six phases:
 
 | Phase | Tests |
 |-------|-------|
-| **1/4 — Container Health** | All 15 containers running |
-| **2/4 — Network Connectivity** | gNB↔AMF (N2), gNB↔UPF (N3), SMF↔UPF (N4), NRF (SBI) |
-| **3/4 — UE Registration** | NGAP connection, registration accept, PDU session |
-| **4/4 — Data Path** | UE has uesimtun0 with 10.45.x.x IP, can ping 8.8.8.8 |
+| **1/6 — Container Health** | All 15 containers running |
+| **2/6 — Network Connectivity** | gNB↔AMF (N2), gNB↔UPF (N3), SMF↔UPF (N4), NRF (SBI) |
+| **3/6 — UE Registration** | NGAP connection, registration accept, PDU session |
+| **4/6 — Data Path** | UE has uesimtun0 with 10.45.x.x IP, can ping 8.8.8.8 |
+| **5/6 — Traffic Burst** | 50 pings + 200-pkt ping flood through UPF tunnel (populates Grafana) |
+| **6/6 — Prometheus Metrics** | Prometheus reachable, AMF `gnb` gauge present, UPF `sessionnbr` present |
 
 **Expected output:**
 ```
@@ -409,30 +415,42 @@ This runs `infrastructure/scripts/test-5g.sh` which validates four phases:
   SP-Labs — 5G End-to-End Validation
 ===========================================
 
-[1/4] Container Health
+[1/6] Container Health
   ✓ Container 'mongodb' is running
   ✓ Container 'nrf' is running
   ... (15 containers)
 
-[2/4] Network Connectivity
+[2/6] Network Connectivity
   ✓ gNB can reach AMF on N2 (10.33.34.12)
   ✓ gNB can reach UPF on N3 (10.33.35.14)
   ✓ SMF can reach UPF on N4 (10.33.36.14)
   ✓ NRF is reachable on SBI
 
-[3/4] UE Registration & PDU Session
+[3/6] UE Registration & PDU Session
   ✓ AMF has NGAP connection from gNB
   ✓ UE registration accepted
   ✓ PDU session established
 
-[4/4] Data Path Validation
+[4/6] Data Path Validation
   ✓ UE has TUN interface with IP
   ✓ UE can ping 8.8.8.8 via UPF tunnel
   ✓ UE can resolve DNS via UPF tunnel
 
+[5/6] Traffic Burst (populates Grafana dashboard)
+  Sending 50 pings through UPF tunnel...
+  ✓ Traffic burst sent through UPF (50 pings + 200 flood)
+
+[6/6] Prometheus Metrics Check
+  ✓ Prometheus is reachable
+  ✓ AMF metrics in Prometheus (gnb gauge)
+  ✓ UPF metrics in Prometheus (sessionnbr)
+
 ===========================================
-  ALL 18 TESTS PASSED
+  ALL 24 TESTS PASSED
 ===========================================
+
+  💡 For sustained traffic & full Grafana graphs, run:
+     make generate-traffic
 ```
 
 ### 9.2 Manual Verification
@@ -570,13 +588,16 @@ docker exec mongodb mongosh --quiet --eval "
 
 ### 12.1 Prometheus Targets
 
-| Job | Target | Network | Monitors |
-|-----|--------|---------|----------|
-| `prometheus` | `localhost:9090` | — | Prometheus self-metrics |
-| `node-exporter` | `node-exporter:9100` | mgmt | Host CPU, memory, disk, network |
-| `open5gs-amf` | `10.33.33.12:9090` | SBI | AMF sessions, registrations |
-| `open5gs-smf` | `10.33.33.13:9090` | SBI | SMF PDU sessions |
-| `open5gs-upf` | `10.33.38.14:9090` | mgmt | UPF throughput (RX/TX bytes) |
+5G NF jobs scrape every **5 seconds** (global default is 15s) for responsive
+real-time graphs.
+
+| Job | Target | Network | Scrape | Monitors |
+|-----|--------|---------|--------|----------|
+| `prometheus` | `localhost:9090` | — | 15s | Prometheus self-metrics |
+| `node-exporter` | `node-exporter:9100` | mgmt | 15s | Host CPU, memory, disk, network |
+| `open5gs-amf` | `10.33.33.12:9090` | SBI | **5s** | AMF registrations, sessions, gNB count |
+| `open5gs-smf` | `10.33.33.13:9090` | SBI | **5s** | SMF PDU sessions, bearers, N4 |
+| `open5gs-upf` | `10.33.38.14:9090` | mgmt | **5s** | UPF throughput (GTP N3 packets), sessions |
 
 **Verify targets are up:**
 ```bash
@@ -584,19 +605,98 @@ curl -s http://localhost:9090/api/v1/targets | \
   jq '.data.activeTargets[] | {job: .labels.job, health: .health}'
 ```
 
-### 12.2 Grafana Dashboard Panels
+### 12.2 Open5GS Metric Names (v2.7.0)
 
-The **"SP-Labs — 5G Core Overview"** dashboard includes:
+These are the **actual** Prometheus metrics exposed by Open5GS 2.7.0 (verified
+from source: `src/amf/metrics.c`, `src/smf/metrics.c`, `src/upf/metrics.c`):
 
-| Panel | Type | Metric |
-|-------|------|--------|
-| Active UE Registrations | Stat | `amf_session_total` |
-| PDU Sessions | Stat | `smf_session_total` |
-| UPF Throughput | Time series | `rate(upf_session_rx_bytes_total[1m])`, `rate(upf_session_tx_bytes_total[1m])` |
-| Host CPU Usage | Time series | `100 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100` |
-| Host Memory Usage | Gauge | `(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100` |
+**AMF Metrics:**
 
-### 12.3 Adding Custom Dashboards
+| Metric | Type | Description |
+|--------|------|-------------|
+| `gnb` | Gauge | Connected gNodeBs |
+| `ran_ue` | Gauge | RAN UE connections |
+| `amf_session` | Gauge | Active AMF sessions |
+| `fivegs_amffunction_rm_reginitreq` | Counter | Initial registration requests |
+| `fivegs_amffunction_rm_reginitsucc` | Counter | Initial registration successes |
+| `fivegs_amffunction_rm_regperiodreq` | Counter | Periodic registration requests |
+| `fivegs_amffunction_rm_regperiodsucc` | Counter | Periodic registration successes |
+| `fivegs_amffunction_rm_regmobreq` | Counter | Mobility registration requests |
+| `fivegs_amffunction_rm_regmobsucc` | Counter | Mobility registration successes |
+| `fivegs_amffunction_mm_paging5g` | Counter | 5G paging events |
+
+**SMF Metrics:**
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `ues_active` | Gauge | Active UEs with sessions |
+| `bearers_active` | Gauge | Active bearers |
+| `gtp_peers_active` | Gauge | Active GTP peers |
+| `fivegs_smffunction_sm_n4sessionestabreq` | Counter | N4 session establishment requests |
+
+**UPF Metrics:**
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `fivegs_upffunction_upf_sessionnbr` | Gauge | Active UPF sessions |
+| `fivegs_ep_n3_gtp_indatapktn3upf` | Counter | GTP N3 inbound data packets |
+| `fivegs_ep_n3_gtp_outdatapktn3upf` | Counter | GTP N3 outbound data packets |
+
+### 12.3 Grafana Dashboard — 5G Core Overview
+
+Navigate to **Dashboards → SP-Labs → SP-Labs — 5G Core Overview**.
+
+The dashboard contains **27 panels** organized into 5 collapsible sections:
+
+**📡 Registration & Sessions** — 6 stat panels showing `gnb`, `ran_ue`,
+`amf_session`, `ues_active`, `bearers_active`, `fivegs_upffunction_upf_sessionnbr`.
+Panels turn green when value ≥ 1.
+
+**📊 AMF — Registration Procedures** — 4 timeseries panels: registration
+request vs success rates, cumulative counters, RAN UEs & sessions over time,
+5G paging events.
+
+**📦 SMF — PDU Session Management** — 2 timeseries panels: N4 session
+establishment rate, active sessions & bearers & GTP peers over time.
+
+**🚀 UPF — User Plane & Throughput** — 4 timeseries panels: N3 GTP packet
+rate (inbound/outbound pkt/s), cumulative N3 GTP packet counters, N4 session
+establishment, UPF active session count.
+
+**🖥️ Host — Infrastructure** — 6 panels: CPU %, memory gauge, network
+traffic (RX/TX), system load averages, disk usage gauge, stacked memory
+breakdown.
+
+### 12.4 Generating Traffic for Dashboards
+
+Dashboard panels only show data when traffic flows through the 5G core.
+Use the built-in traffic generator:
+
+```bash
+# Quick burst (run during E2E test)
+make test-5g
+
+# Sustained traffic — default 5 minutes
+make generate-traffic
+
+# Custom duration — 10 minutes
+make generate-traffic TRAFFIC_DURATION=10
+```
+
+The traffic generator (`infrastructure/scripts/generate-traffic.sh`) runs
+4 parallel streams through the UERANSIM UE tunnel:
+
+| Phase | Traffic Type | Pattern |
+|-------|-------------|---------|
+| 1. ICMP | 3 ping streams (8.8.8.8, 1.1.1.1, 8.8.4.4) | 0.5–1s intervals, 1400B payloads |
+| 2. DNS | HTTP GET to 1.1.1.1 | Every 3 seconds |
+| 3. HTTP | wget downloads from 1.1.1.1, 8.8.8.8 | Every 5 seconds |
+| 4. Burst | 100-packet ping flood | Every 30 seconds |
+
+The script shows live progress and prints a **final metrics snapshot** from
+Prometheus when complete.
+
+### 12.5 Adding Custom Dashboards
 
 Place JSON files in `monitoring/grafana/dashboards/` and restart Grafana.
 Ensure the datasource UID in your JSON matches `"uid": "prometheus"`.
@@ -605,14 +705,20 @@ Ensure the datasource UID in your JSON matches `"uid": "prometheus"`.
 docker restart grafana
 ```
 
-### 12.4 Inspecting Raw Metrics
+### 12.6 Inspecting Raw Metrics
 
 ```bash
 # Check what metrics AMF exposes
 docker exec prometheus wget -qO- http://10.33.33.12:9090/metrics | head -30
 
+# Check what metrics SMF exposes
+docker exec prometheus wget -qO- http://10.33.33.13:9090/metrics | head -30
+
 # Check what metrics UPF exposes
 docker exec prometheus wget -qO- http://10.33.38.14:9090/metrics | head -30
+
+# Query a specific metric via Prometheus API
+curl -s 'http://localhost:9090/api/v1/query?query=gnb' | jq '.data.result'
 ```
 
 ---
@@ -948,7 +1054,9 @@ docker exec ue ping -I uesimtun0 -c 2 8.8.8.8
 |---------|-------|-----|
 | "No data" on all panels | Datasource UID mismatch | Set `uid: prometheus` in datasources.yml |
 | "No data" on 5G panels only | Prometheus can't reach NFs | Check `http://localhost:9090/targets` |
+| "No data" on 5G panels only | No traffic generated yet | Run `make generate-traffic` |
 | Node panels work, 5G don't | Prometheus not on SBI network | Check monitoring compose networks |
+| Stat panels show 0 / red | No UE registered or tunnel down | Run `make test-5g` to verify UE status |
 
 ### 16.6 Prometheus Targets Down
 
@@ -1076,6 +1184,195 @@ command: nr-gnb   # WRONG
 
 ---
 
+## 18. Connecting an External F5 BIG-IP
+
+This section explains how to integrate an external F5 BIG-IP (hardware
+appliance, BIG-IP VE, or BIG-IP Next) into the SP-Labs 5G architecture.
+This lays the foundation for advanced lab exercises: Gi-LAN services, CGNAT,
+traffic steering, API protection, GTP visibility, and more.
+
+### 18.1 BIG-IP Placement Options
+
+In a real service-provider 5G deployment, BIG-IP sits at one or more of
+these network insertion points:
+
+```
+                                                     ┌─────────────┐
+  ┌──────────┐    ┌──────────┐    ┌──────────┐       │  F5 BIG-IP  │
+  │    UE    ├───►│   gNB    ├─N3─┤   UPF    ├──N6──►│  (Gi-LAN)   │──► Internet
+  └──────────┘    └────┬─────┘    └────┬─────┘       │             │
+                       │N2             │N4            └──────┬──────┘
+                  ┌────┴─────┐   ┌────┴─────┐               │
+                  │   AMF    │   │   SMF    │          ┌────┴──────┐
+                  └────┬─────┘   └──────────┘          │ BIG-IP as │
+                       │SBI                            │ SBI Proxy │
+                  ┌────┴─────┐                         └───────────┘
+                  │ NRF/SCP  │
+                  └──────────┘
+```
+
+| Placement | Network | Use Cases |
+|-----------|---------|-----------|
+| **N6 / Gi-LAN** (most common) | `sp-labs-n6` (10.33.37.0/24) | CGNAT, DNS proxy, TCP optimization, SSL visibility, URL filtering |
+| **N3 / N9 steering** | `sp-labs-n3` (10.33.35.0/24) | GTP firewall, traffic classification, subscriber-aware steering |
+| **SBI proxy** | `sp-labs-sbi` (10.33.33.0/24) | API gateway for NF HTTP/2, rate limiting, NRF load balancing |
+| **N4 signaling proxy** | `sp-labs-n4` (10.33.36.0/24) | PFCP proxy, session-aware policy enforcement |
+| **Management** | `sp-labs-mgmt` (10.33.38.0/24) | BIG-IP management, iControl REST, telemetry export |
+
+### 18.2 Network Connectivity — N6 / Gi-LAN Insertion
+
+The most common starting point is **N6 (Gi-LAN)** — BIG-IP sits between the
+UPF and the internet, processing all subscriber data traffic.
+
+**Step 1 — Attach BIG-IP to the N6 Docker network:**
+
+If BIG-IP runs as a VM on the same host (BIG-IP VE):
+
+```bash
+# Find the Docker bridge for the N6 network
+docker network inspect sp-labs-n6 -f '{{.Id}}' | cut -c1-12
+# → bridge name is br-<first-12-chars>
+
+# Create a macvlan or veth pair to connect BIG-IP VE to this bridge
+# Or expose the bridge to a host interface that BIG-IP VE can reach
+```
+
+If BIG-IP is on a separate physical/virtual machine:
+
+```bash
+# On the Docker host — route N6 traffic to BIG-IP
+sudo ip route add <bigip-internal-subnet> via <bigip-n6-gateway>
+
+# On BIG-IP (tmsh) — route back to UPF N6 address
+create net route sp-labs-n6 network 10.33.37.0/24 gw <docker-host-ip>
+```
+
+**Step 2 — Assign BIG-IP a static IP on the N6 network:**
+
+| Interface | IP Address | Purpose |
+|-----------|-----------|---------|
+| BIG-IP Internal (N6) | `10.33.37.200` | Receives traffic from UPF |
+| BIG-IP External | DHCP or static on host LAN | Sends traffic to internet |
+| BIG-IP Management | `10.33.38.250` (mgmt) | iControl REST, GUI, SSH |
+
+**Step 3 — Redirect UPF default route through BIG-IP:**
+
+```bash
+# Inside the UPF container — reroute through BIG-IP
+docker exec upf ip route replace default via 10.33.37.200
+```
+
+### 18.3 Network Connectivity — SBI API Gateway
+
+For HTTP/2 SBI traffic inspection or API protection:
+
+```bash
+# BIG-IP acts as reverse proxy in front of NRF or SCP:
+#   NFs → BIG-IP VIP (10.33.33.250:7777) → NRF (10.33.33.10:7777)
+#
+# Update NF configs to point scp/nrf URI to BIG-IP VIP:
+#   scp:
+#     client:
+#       nrf:
+#         - uri: http://10.33.33.250:7777
+```
+
+### 18.4 BIG-IP Configuration Examples
+
+**Example A — CGNAT (Carrier-Grade NAT) on N6:**
+
+```
+# tmsh — BIG-IP CLI
+create ltm pool pool_internet members add { <internet-gw>:0 }
+create ltm snat-pool snat_cgnat members add { 198.51.100.1 198.51.100.2 }
+create ltm virtual vs_cgnat {
+    destination 0.0.0.0:0
+    pool pool_internet
+    source-address-translation { type snat pool snat_cgnat }
+    vlans add { vlan_n6 }
+    vlans-enabled
+    profiles add { fastL4 }
+}
+```
+
+**Example B — DNS Transparent Proxy:**
+
+```
+# Intercept all DNS traffic from subscribers
+create ltm virtual vs_dns_intercept {
+    destination 0.0.0.0:53
+    ip-protocol udp
+    pool pool_dns_resolvers
+    vlans add { vlan_n6 }
+    vlans-enabled
+    profiles add { udp dns }
+}
+```
+
+**Example C — SBI API Gateway (HTTP/2 reverse proxy):**
+
+```
+create ltm pool pool_nrf members add { 10.33.33.10:7777 }
+create ltm virtual vs_sbi_gateway {
+    destination 10.33.33.250:7777
+    pool pool_nrf
+    profiles add { http2 tcp }
+}
+```
+
+### 18.5 Telemetry Integration
+
+Export BIG-IP metrics to the existing Prometheus/Grafana stack:
+
+```yaml
+# Add to monitoring/prometheus/prometheus.yml
+- job_name: 'bigip'
+  static_configs:
+    - targets: ['10.33.38.250:9273']
+      labels:
+        component: 'bigip'
+        role: 'gi-lan'
+```
+
+Recommended approaches:
+- **F5 Telemetry Streaming (TS)** — push to Prometheus Pushgateway or pull
+- **prometheus-bigip-exporter** — community Prometheus exporter for iControl REST
+- **BIG-IP AVR** — built-in analytics module
+
+### 18.6 Future Lab Exercises
+
+The BIG-IP integration enables these planned lab modules:
+
+| Lab | Placement | Skills Practiced |
+|-----|-----------|------------------|
+| **Lab A: Gi-LAN CGNAT** | N6 inline | SNAT pools, logging, port-block allocation |
+| **Lab B: Subscriber-Aware Steering** | N3 GTP | iRules GTP parsing, per-IMSI policy |
+| **Lab C: DNS Security** | N6 inline | DNS profile, DDoS mitigation, DoH proxy |
+| **Lab D: SBI API Protection** | SBI proxy | HTTP/2 reverse proxy, JWT validation, rate limiting |
+| **Lab E: TCP Optimization** | N6 inline | FastL4/Full-proxy profiles, congestion control |
+| **Lab F: SSL Visibility** | N6 inline | SSL Orchestrator, decrypt/inspect/re-encrypt |
+| **Lab G: N4 PFCP Visibility** | N4 inline | PFCP protocol awareness, session logging |
+| **Lab H: Edge / MEC Steering** | N6/N9 | Local breakout, MEC traffic steering via iRules |
+| **Lab I: 5G Slice Policy** | SBI + N6 | Per-slice (SST/SD) BIG-IP policy via PCF API |
+| **Lab J: Observability** | Mgmt | Telemetry Streaming → Prometheus → Grafana |
+
+### 18.7 IP Address Reservation for BIG-IP
+
+Reserved addresses across SP-Labs networks (not used by any container):
+
+| Network | Reserved IP | BIG-IP Interface |
+|---------|------------|-----------------|
+| `sp-labs-n6` (10.33.37.0/24) | `10.33.37.200` | Internal (data) |
+| `sp-labs-n3` (10.33.35.0/24) | `10.33.35.200` | GTP inspection |
+| `sp-labs-sbi` (10.33.33.0/24) | `10.33.33.250` | SBI API proxy |
+| `sp-labs-n4` (10.33.36.0/24) | `10.33.36.250` | PFCP proxy |
+| `sp-labs-mgmt` (10.33.38.0/24) | `10.33.38.250` | Management (GUI, SSH, iControl) |
+
+> **Note:** These IPs are intentionally left unused in the current deployment
+> to avoid conflicts when BIG-IP is introduced.
+
+---
+
 ## Appendix A — Make Targets
 
 | Target | Description |
@@ -1088,7 +1385,8 @@ command: nr-gnb   # WRONG
 | `make stop-5g` | Stop 5G lab |
 | `make restart-5g` | Stop + start 5G lab |
 | `make logs-5g` | Tail 5G lab logs |
-| `make test-5g` | Run 5G E2E validation |
+| `make test-5g` | Run 5G E2E validation (6 phases) |
+| `make generate-traffic` | Generate sustained 5G traffic for Grafana (default 5 min) |
 | `make deploy-6g` | Deploy 6G lab (auto-detects GPU) |
 | `make stop-6g` | Stop 6G lab |
 | `make logs-6g` | Tail 6G lab logs |
@@ -1154,7 +1452,9 @@ command: nr-gnb   # WRONG
 | `prometheus/prometheus.yml` | Prometheus | Scrape targets |
 | `grafana/.../datasources.yml` | Grafana | Prometheus datasource (uid: prometheus) |
 | `grafana/.../dashboards.yml` | Grafana | Dashboard file provider |
-| `grafana/dashboards/5g-core-dashboard.json` | Grafana | 5G Core Overview dashboard |
+| `grafana/dashboards/5g-core-dashboard.json` | Grafana | 5G Core Overview dashboard (27 panels) |
+| `scripts/test-5g.sh` | Test | 6-phase E2E validation + traffic burst |
+| `scripts/generate-traffic.sh` | Test | Sustained 4-phase traffic generator for Grafana |
 
 ---
 
