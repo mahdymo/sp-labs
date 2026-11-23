@@ -340,9 +340,10 @@ services:
       - SST=1
       - SD=0xFFFFFF
       - AMF_IP=10.33.34.12
-      - N2_IFACE=eth0
-      - N3_IFACE=eth1
-      - RADIO_IFACE=eth2
+      # ethN sorted by network name: mgmt=eth0, n2=eth1, n3=eth2
+      - N2_IFACE=eth1
+      - N3_IFACE=eth2
+      - RADIO_IFACE=eth0
     cap_add:
       - NET_ADMIN
     networks:

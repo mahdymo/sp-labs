@@ -9,7 +9,7 @@ global:
 smf:
   sbi:
     server:
-      - dev: eth0
+      - dev: eth2
         port: 7777
     client:
       scp:

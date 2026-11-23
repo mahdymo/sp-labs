@@ -803,12 +803,16 @@ global:
 
 ```yaml
 amf:
+  sbi:
+    server:
+      - dev: eth2              # SBI interface (10.33.33.12)
+        port: 7777
   ngap:
     server:
       - dev: eth1              # N2 interface (10.33.34.12)
   metrics:
     server:
-      - dev: eth0              # Prometheus metrics on SBI
+      - dev: eth2              # Prometheus metrics on SBI
         port: 9090
   guami:
     - plmn_id: { mcc: 999, mnc: 70 }
@@ -858,10 +862,10 @@ smf:
 upf:
   pfcp:
     server:
-      - dev: eth1              # N4 interface (10.33.36.14)
+      - dev: eth2              # N4 interface (10.33.36.14)
   gtpu:
     server:
-      - dev: eth0              # N3 interface (10.33.35.14)
+      - dev: eth1              # N3 interface (10.33.35.14)
   metrics:
     server:
       - address: 10.33.38.14   # Mgmt interface for Prometheus
@@ -870,9 +874,9 @@ upf:
     - subnet: 10.45.0.1/16     # Must match SMF session config
 ```
 
-> **Critical — ethN order:** Docker assigns interfaces in the order networks
-> appear in the service's `networks:` block. For UPF: n3→eth0, n4→eth1,
-> n6→eth2, mgmt→eth3.
+> **Critical — ethN order:** Docker assigns interfaces in **lexicographic order
+> of the full network name** (see §15.3). For UPF: mgmt→eth0, n3→eth1,
+> n4→eth2, n6→eth3.
 
 ### 14.5 UDR / PCF — MongoDB Connection
 
@@ -955,14 +959,17 @@ in this lab intentionally **omits** `freeDiameter:`.
 
 ### 15.3 Docker ethN Interface Mapping
 
-Docker assigns `ethN` in the order of `networks:` declaration per service:
+> **Critical:** Docker assigns `ethN` in **lexicographic order of the full
+> network name** (`sp-labs-mgmt` < `sp-labs-n2` < `sp-labs-n3` < …
+> < `sp-labs-sbi`), **not** the declaration order in `docker-compose.yml`.
 
 | Container | eth0 | eth1 | eth2 | eth3 |
 |-----------|------|------|------|------|
-| **amf** | sbi (33.12) | n2 (34.12) | mgmt (38.12) | — |
-| **smf** | sbi (33.13) | n4 (36.13) | mgmt (38.13) | — |
-| **upf** | n3 (35.14) | n4 (36.14) | n6 (37.14) | mgmt (38.14) |
-| **gnb** | n2 (34.100) | n3 (35.100) | mgmt (38.100) | — |
+| **nrf** | mgmt (38.10) | sbi (33.10) | — | — |
+| **amf** | mgmt (38.12) | n2 (34.12) | sbi (33.12) | — |
+| **smf** | mgmt (38.13) | n4 (36.13) | sbi (33.13) | — |
+| **upf** | mgmt (38.14) | n3 (35.14) | n4 (36.14) | n6 (37.14) |
+| **gnb** | mgmt (38.100) | n2 (34.100) | n3 (35.100) | — |
 
 ### 15.4 UE IP Pool
 
@@ -1119,9 +1126,11 @@ immediate crash. **Solution:** Remove it — not needed for 5G SA.
 
 ### 17.3 Docker ethN Interface Order
 
-Docker assigns `ethN` in the order networks appear in the service's
-`networks:` block in `docker-compose.yml`. **Not alphabetical, not by subnet.**
-Reordering `networks:` entries changes `ethN` and breaks `dev: ethN` configs.
+Docker assigns `ethN` in **lexicographic order of the full network name**
+(e.g. `sp-labs-mgmt` < `sp-labs-n2` < `sp-labs-sbi`), **NOT** in the order
+declared in the service's `networks:` block. This was confirmed by runtime
+inspection. Always verify with `docker exec <container> ip addr` after
+changing network assignments. See §15.3 for the correct mapping table.
 
 ### 17.4 SMF `gtpc`/`gtpu` Must Use `address:` Not `dev:`
 

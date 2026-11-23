@@ -9,10 +9,10 @@ global:
 upf:
   pfcp:
     server:
-      - dev: eth1
+      - dev: eth2
   gtpu:
     server:
-      - dev: eth0
+      - dev: eth1
   metrics:
     server:
       - address: 10.33.38.14

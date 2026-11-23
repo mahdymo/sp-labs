@@ -9,7 +9,7 @@ global:
 amf:
   sbi:
     server:
-      - dev: eth0
+      - dev: eth2
         port: 7777
     client:
       scp:
@@ -19,7 +19,7 @@ amf:
       - dev: eth1
   metrics:
     server:
-      - dev: eth0
+      - dev: eth2
         port: 9090
   guami:
     - plmn_id:

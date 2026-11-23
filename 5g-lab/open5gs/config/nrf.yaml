@@ -13,5 +13,5 @@ nrf:
         mnc: 70
   sbi:
     server:
-      - dev: eth0
+      - dev: eth1
         port: 7777
