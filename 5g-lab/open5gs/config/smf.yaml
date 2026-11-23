@@ -9,14 +9,14 @@ global:
 smf:
   sbi:
     server:
-      - dev: eth2
+      - address: 10.33.33.13
         port: 7777
     client:
       scp:
-        - uri: http://scp:7777
+        - uri: http://10.33.33.11:7777
   pfcp:
     server:
-      - dev: eth1
+      - address: 10.33.36.13
     client:
       upf:
         - address: 10.33.36.14

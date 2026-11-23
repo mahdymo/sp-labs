@@ -340,10 +340,11 @@ services:
       - SST=1
       - SD=0xFFFFFF
       - AMF_IP=10.33.34.12
-      # ethN sorted by network name: mgmt=eth0, n2=eth1, n3=eth2
-      - N2_IFACE=eth1
-      - N3_IFACE=eth2
-      - RADIO_IFACE=eth0
+      # Bypass ethN lookup — set bind IPs directly (entrypoint uses
+      # these when present, skipping non-deterministic interface discovery)
+      - N2_BIND_IP=10.33.34.100
+      - N3_BIND_IP=10.33.35.100
+      - RADIO_BIND_IP=10.33.38.100
     cap_add:
       - NET_ADMIN
     networks:

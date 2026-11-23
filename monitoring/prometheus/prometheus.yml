@@ -29,11 +29,9 @@ scrape_configs:
   # --------------------------------------------------------------------------
   # Open5GS 5G Core NF Metrics
   # --------------------------------------------------------------------------
-  # NF metrics bind to their SBI interface (eth0 in each container).
-  # Prometheus is on the mgmt network, so we need to reach them via
-  # the SBI addresses. Since Prometheus isn't on the SBI network,
-  # we target the mgmt IPs and need the NFs to bind metrics there.
-  # For now, use SBI IPs — we'll add Prometheus to the SBI network.
+  # AMF/SMF metrics bind to their SBI IP (address: in config).
+  # UPF metrics bind to its mgmt IP (10.33.38.14).
+  # Prometheus is on both sbi and mgmt networks, so all are reachable.
   - job_name: 'open5gs-amf'
     scrape_interval: 5s
     static_configs:

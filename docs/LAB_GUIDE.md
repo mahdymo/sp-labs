@@ -805,14 +805,17 @@ global:
 amf:
   sbi:
     server:
-      - dev: eth2              # SBI interface (10.33.33.12)
+      - address: 10.33.33.12   # SBI network — explicit IP, NOT dev:
         port: 7777
+    client:
+      scp:
+        - uri: http://10.33.33.11:7777
   ngap:
     server:
-      - dev: eth1              # N2 interface (10.33.34.12)
+      - address: 10.33.34.12   # N2 network
   metrics:
     server:
-      - dev: eth2              # Prometheus metrics on SBI
+      - address: 10.33.33.12   # Prometheus scrapes via SBI
         port: 9090
   guami:
     - plmn_id: { mcc: 999, mnc: 70 }
@@ -835,9 +838,16 @@ amf:
 
 ```yaml
 smf:
+  sbi:
+    server:
+      - address: 10.33.33.13   # SBI network — explicit IP
+        port: 7777
+    client:
+      scp:
+        - uri: http://10.33.33.11:7777
   pfcp:
     server:
-      - dev: eth1              # N4 interface (10.33.36.13)
+      - address: 10.33.36.13   # N4 network
     client:
       upf:
         - address: 10.33.36.14 # UPF N4 address
@@ -862,10 +872,10 @@ smf:
 upf:
   pfcp:
     server:
-      - dev: eth2              # N4 interface (10.33.36.14)
+      - address: 10.33.36.14   # N4 network
   gtpu:
     server:
-      - dev: eth1              # N3 interface (10.33.35.14)
+      - address: 10.33.35.14   # N3 network
   metrics:
     server:
       - address: 10.33.38.14   # Mgmt interface for Prometheus
@@ -874,9 +884,11 @@ upf:
     - subnet: 10.45.0.1/16     # Must match SMF session config
 ```
 
-> **Critical — ethN order:** Docker assigns interfaces in **lexicographic order
-> of the full network name** (see §15.3). For UPF: mgmt→eth0, n3→eth1,
-> n4→eth2, n6→eth3.
+> **Critical — always use `address:`, never `dev:`** Docker's `ethN` interface
+> ordering is **non-deterministic** across `docker compose down/up` cycles. It
+> may follow network creation order, lexicographic order of network names, or
+> Docker-internal ID order. Using explicit IP addresses eliminates this class
+> of bugs entirely.
 
 ### 14.5 UDR / PCF — MongoDB Connection
 
@@ -957,19 +969,13 @@ in this lab intentionally **omits** `freeDiameter:`.
 | grafana | — | — | — | — | — | .201 |
 | node-exporter | — | — | — | — | — | .202 |
 
-### 15.3 Docker ethN Interface Mapping
+### 15.3 Why We Use `address:` Instead of `dev:` in Open5GS Configs
 
-> **Critical:** Docker assigns `ethN` in **lexicographic order of the full
-> network name** (`sp-labs-mgmt` < `sp-labs-n2` < `sp-labs-n3` < …
-> < `sp-labs-sbi`), **not** the declaration order in `docker-compose.yml`.
-
-| Container | eth0 | eth1 | eth2 | eth3 |
-|-----------|------|------|------|------|
-| **nrf** | mgmt (38.10) | sbi (33.10) | — | — |
-| **amf** | mgmt (38.12) | n2 (34.12) | sbi (33.12) | — |
-| **smf** | mgmt (38.13) | n4 (36.13) | sbi (33.13) | — |
-| **upf** | mgmt (38.14) | n3 (35.14) | n4 (36.14) | n6 (37.14) |
-| **gnb** | mgmt (38.100) | n2 (34.100) | n3 (35.100) | — |
+> **Critical:** Docker's `ethN` assignment order is **non-deterministic** for
+> multi-network containers. It can change between `docker compose down/up`
+> cycles depending on network creation order, Docker engine internals, or
+> platform. **Never use `dev: ethN`** in Open5GS configs — always use
+> `address: <explicit-IP>` to guarantee the NF binds to the correct network.
 
 ### 15.4 UE IP Pool
 
@@ -1124,18 +1130,41 @@ The `freeDiameter:` section triggers hostname resolution for certificate
 generation. In Docker, the container hostname doesn't resolve, causing
 immediate crash. **Solution:** Remove it — not needed for 5G SA.
 
-### 17.3 Docker ethN Interface Order
+### 17.3 Docker ethN Interface Order Is Non-Deterministic
 
-Docker assigns `ethN` in **lexicographic order of the full network name**
-(e.g. `sp-labs-mgmt` < `sp-labs-n2` < `sp-labs-sbi`), **NOT** in the order
-declared in the service's `networks:` block. This was confirmed by runtime
-inspection. Always verify with `docker exec <container> ip addr` after
-changing network assignments. See §15.3 for the correct mapping table.
+Docker's `ethN` assignment for multi-network containers is **not deterministic**.
+It may follow network creation order, lexicographic name order, or Docker-
+internal ID order — and it can **change between `docker compose down/up`
+cycles**. This was confirmed empirically: the same compose file produced
+different ethN mappings after recreation.
 
-### 17.4 SMF `gtpc`/`gtpu` Must Use `address:` Not `dev:`
+**Solution:** Never use `dev: ethN` in Open5GS configs. Always use explicit
+`address:` with the IP from docker-compose.yml. See §15.3.
+
+### 17.4 All Open5GS Bind Directives Must Use `address:` Not `dev:`
 
 ```yaml
-# WRONG — startup assertion failure
+# WRONG — ethN order is non-deterministic
+sbi:
+  server:
+    - dev: eth0
+      port: 7777
+
+# CORRECT — explicit IP from docker-compose.yml
+sbi:
+  server:
+    - address: 10.33.33.12
+      port: 7777
+```
+
+This applies to `sbi.server`, `ngap.server`, `pfcp.server`, `gtpu.server`,
+`metrics.server`, and any other bind directive. The only exception is
+`gtpc`/`gtpu` in SMF which **require** `address:` (see below).
+
+### 17.5 SMF `gtpc`/`gtpu` Assertion Failure with `dev:`
+
+```yaml
+# WRONG — startup assertion failure (SMF-specific bug)
 gtpc:
   server:
     - dev: eth0
@@ -1146,7 +1175,7 @@ gtpc:
     - address: 10.33.33.13
 ```
 
-### 17.5 Session Subnet Uses Gateway/Prefix Format
+### 17.6 Session Subnet Uses Gateway/Prefix Format
 
 ```yaml
 # CORRECT — 10.45.0.1 is the gateway
@@ -1158,22 +1187,22 @@ session:
   - subnet: 10.45.0.0/16
 ```
 
-### 17.6 `openverso` Entrypoint Overrides `db_uri`
+### 17.7 `openverso` Entrypoint Overrides `db_uri`
 
 The entrypoint reads `DB_URI` env var and writes it into the config. For NFs
 needing MongoDB (UDR, PCF), set **both** YAML `db_uri:` and Docker `DB_URI=`.
 
-### 17.7 WebUI Default Account Only in Dev Mode
+### 17.8 WebUI Default Account Only in Dev Mode
 
 The admin/1423 account is only auto-created when `NODE_ENV !== 'production'`.
 Gradiant image defaults to production. **Fix:** `NODE_ENV=development`.
 
-### 17.8 Grafana Datasource UID Must Match Dashboard JSON
+### 17.9 Grafana Datasource UID Must Match Dashboard JSON
 
 Auto-generated UIDs won't match `"uid": "prometheus"` in dashboard JSON.
 **Fix:** Explicitly set `uid: prometheus` in `datasources.yml`.
 
-### 17.9 SCP Requires `global` Section
+### 17.10 SCP Requires `global` Section
 
 Without `global:`, SCP fails to parse the config:
 ```yaml
