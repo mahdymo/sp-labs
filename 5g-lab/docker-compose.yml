@@ -231,6 +231,8 @@ services:
     container_name: udr
     restart: unless-stopped
     command: open5gs-udrd
+    environment:
+      - DB_URI=mongodb://mongodb:27017/open5gs
     ulimits:
       nofile:
         soft: 65536
@@ -252,6 +254,8 @@ services:
     container_name: pcf
     restart: unless-stopped
     command: open5gs-pcfd
+    environment:
+      - DB_URI=mongodb://mongodb:27017/open5gs
     ulimits:
       nofile:
         soft: 65536

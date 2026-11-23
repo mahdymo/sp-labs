@@ -18,8 +18,5 @@ upf:
       - dev: eth0
         port: 9090
   session:
-    - subnet: 10.45.0.0/16
-      gateway: 10.45.0.1
-      dnn: internet
-    - subnet: 2001:db8:cafe::/48
-      gateway: 2001:db8:cafe::1
+    - subnet: 10.45.0.1/16
+    - subnet: 2001:db8:cafe::1/48

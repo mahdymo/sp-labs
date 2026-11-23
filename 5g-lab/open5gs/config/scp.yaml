@@ -2,6 +2,10 @@ logger:
   file: /opt/open5gs/var/log/open5gs/scp.log
   level: info
 
+global:
+  max:
+    ue: 1024
+
 scp:
   sbi:
     server:

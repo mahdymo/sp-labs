@@ -22,20 +22,18 @@ smf:
         - address: 10.33.36.14
   gtpc:
     server:
-      - dev: eth0
+      - address: 10.33.33.13
   gtpu:
     server:
-      - dev: eth0
+      - address: 10.33.33.13
   metrics:
     server:
-      - dev: eth0
+      - address: 10.33.33.13
         port: 9090
   session:
-    - subnet: 10.45.0.0/16
-      gateway: 10.45.0.1
+    - subnet: 10.45.0.1/16
       dnn: internet
-    - subnet: 2001:db8:cafe::/48
-      gateway: 2001:db8:cafe::1
+    - subnet: 2001:db8:cafe::1/48
   dns:
     - 8.8.8.8
     - 8.8.4.4
