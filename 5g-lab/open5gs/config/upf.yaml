@@ -1,6 +1,5 @@
 logger:
-  file:
-    path: /opt/open5gs/var/log/open5gs/upf.log
+  file: /opt/open5gs/var/log/open5gs/upf.log
   level: info
 
 global:

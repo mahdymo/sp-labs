@@ -1,6 +1,5 @@
 logger:
-  file:
-    path: /opt/open5gs/var/log/open5gs/amf.log
+  file: /opt/open5gs/var/log/open5gs/amf.log
   level: info
 
 global:
