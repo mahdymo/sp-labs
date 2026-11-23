@@ -312,6 +312,7 @@ services:
     environment:
       - DB_URI=mongodb://mongodb:27017/open5gs
       - HOSTNAME=0.0.0.0
+      - NODE_ENV=development
     ports:
       - "9999:9999"
     networks:
