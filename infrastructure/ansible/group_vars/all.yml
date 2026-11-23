@@ -23,7 +23,7 @@ docker_edition: ce
 docker_compose_version: v2
 
 # --- 5G Core (Open5GS) ---
-open5gs_version: "2.7.2"
+open5gs_version: "2.7.0"
 open5gs_image: "openverso/open5gs:{{ open5gs_version }}"
 mongodb_version: "6.0"
 mongodb_image: "mongo:{{ mongodb_version }}"

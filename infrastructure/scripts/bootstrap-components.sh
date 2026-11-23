@@ -8,7 +8,7 @@
 if $INSTALL_5G; then
   log "Pulling 5G lab Docker images..."
   docker pull mongo:6.0
-  docker pull openverso/open5gs:2.7.2
+  docker pull openverso/open5gs:2.7.0
   docker pull openverso/ueransim:3.2.6
   log "5G images ready"
 fi

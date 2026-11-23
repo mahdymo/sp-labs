@@ -78,7 +78,7 @@ bootstrap to provision the entire environment.
 
 | Component | Version | Image / Source |
 |-----------|---------|----------------|
-| Open5GS | v2.7.2 | `openverso/open5gs:2.7.2` |
+| Open5GS | v2.7.0 | `openverso/open5gs:2.7.0` |
 | MongoDB | 6.0 | `mongo:6.0` |
 | UERANSIM | v3.2.6 | `openverso/ueransim:3.2.6` |
 | NVIDIA Sionna | 0.19.1 | Custom Dockerfile (TensorFlow + Sionna) |

@@ -25,7 +25,7 @@
   command: docker pull {{ item }}
   loop:
     - mongo:6.0
-    - openverso/open5gs:2.7.2
+    - openverso/open5gs:2.7.0
   changed_when: false
 
 - name: Start Open5GS 5G Core

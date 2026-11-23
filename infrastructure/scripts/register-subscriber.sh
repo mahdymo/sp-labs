@@ -50,7 +50,6 @@ docker exec mongodb mongosh --quiet --eval "
     'slice': [
       {
         'sst': ${SST},
-        'sd': '000001',
         'default_indicator': true,
         'session': [
           {
