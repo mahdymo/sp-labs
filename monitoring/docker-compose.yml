@@ -3,6 +3,9 @@
 # ==============================================================================
 
 networks:
+  sbi:
+    name: sp-labs-sbi
+    external: true
   mgmt:
     name: sp-labs-mgmt
     external: true
@@ -32,6 +35,8 @@ services:
       - '--storage.tsdb.retention.time=30d'
       - '--web.enable-lifecycle'
     networks:
+      sbi:
+        ipv4_address: 10.33.33.200
       mgmt:
         ipv4_address: 10.33.38.200
 
