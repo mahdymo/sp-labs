@@ -77,6 +77,10 @@ logs-5g: ## Tail 5G lab logs
 test-5g: ## Run 5G end-to-end test
 	@bash infrastructure/scripts/test-5g.sh
 
+.PHONY: generate-traffic
+generate-traffic: ## Generate 5G traffic for Grafana dashboards (default: 5 min)
+	@bash infrastructure/scripts/generate-traffic.sh $(TRAFFIC_DURATION)
+
 # ==============================================================================
 # 6G LAB
 # ==============================================================================

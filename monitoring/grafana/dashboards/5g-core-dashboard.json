@@ -1,108 +1,246 @@
 {
   "annotations": { "list": [] },
-  "editable": true,
-  "fiscalYearStartMonth": 0,
-  "graphTooltip": 1,
-  "id": null,
-  "links": [],
+  "editable": true, "fiscalYearStartMonth": 0, "graphTooltip": 1, "id": null, "links": [],
   "panels": [
+    { "collapsed": false, "gridPos": {"h":1,"w":24,"x":0,"y":0}, "id": 100, "title": "📡 5G Core — Registration & Sessions", "type": "row" },
     {
-      "title": "5G Core — Active UE Registrations",
-      "type": "stat",
-      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "title": "Connected gNodeBs", "type": "stat", "id": 1,
+      "gridPos": {"h":5,"w":4,"x":0,"y":1},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"gnb","legendFormat":"gNBs","refId":"A"}],
+      "fieldConfig": {"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":1}]}}},
+      "options": {"colorMode":"background","graphMode":"none","textMode":"auto","reduceOptions":{"calcs":["lastNotNull"]}}
+    },
+    {
+      "title": "RAN UE Connections", "type": "stat", "id": 2,
+      "gridPos": {"h":5,"w":4,"x":4,"y":1},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"ran_ue","legendFormat":"RAN UEs","refId":"A"}],
+      "fieldConfig": {"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":1}]}}},
+      "options": {"colorMode":"background","graphMode":"none","textMode":"auto","reduceOptions":{"calcs":["lastNotNull"]}}
+    },
+    {
+      "title": "AMF Sessions", "type": "stat", "id": 3,
+      "gridPos": {"h":5,"w":4,"x":8,"y":1},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"amf_session","legendFormat":"Sessions","refId":"A"}],
+      "fieldConfig": {"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":1},{"color":"yellow","value":50}]}}},
+      "options": {"colorMode":"background","graphMode":"none","textMode":"auto","reduceOptions":{"calcs":["lastNotNull"]}}
+    },
+    {
+      "title": "SMF Active UEs", "type": "stat", "id": 4,
+      "gridPos": {"h":5,"w":4,"x":12,"y":1},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"ues_active","legendFormat":"UEs","refId":"A"}],
+      "fieldConfig": {"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"red","value":null},{"color":"green","value":1}]}}},
+      "options": {"colorMode":"background","graphMode":"none","textMode":"auto","reduceOptions":{"calcs":["lastNotNull"]}}
+    },
+    {
+      "title": "Active Bearers", "type": "stat", "id": 5,
+      "gridPos": {"h":5,"w":4,"x":16,"y":1},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"bearers_active","legendFormat":"Bearers","refId":"A"}],
+      "fieldConfig": {"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"dark-blue","value":null},{"color":"green","value":1}]}}},
+      "options": {"colorMode":"background","graphMode":"none","textMode":"auto","reduceOptions":{"calcs":["lastNotNull"]}}
+    },
+    {
+      "title": "UPF Sessions", "type": "stat", "id": 6,
+      "gridPos": {"h":5,"w":4,"x":20,"y":1},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"fivegs_upffunction_upf_sessionnbr","legendFormat":"Sessions","refId":"A"}],
+      "fieldConfig": {"defaults":{"color":{"mode":"thresholds"},"thresholds":{"steps":[{"color":"dark-blue","value":null},{"color":"green","value":1}]}}},
+      "options": {"colorMode":"background","graphMode":"none","textMode":"auto","reduceOptions":{"calcs":["lastNotNull"]}}
+    },
+    { "collapsed": false, "gridPos": {"h":1,"w":24,"x":0,"y":6}, "id": 101, "title": "📊 AMF — Registration Procedures", "type": "row" },
+    {
+      "title": "AMF — Registration Requests vs Success", "type": "timeseries", "id": 10,
+      "gridPos": {"h":8,"w":12,"x":0,"y":7},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
       "targets": [
-        {
-          "expr": "amf_session_total",
-          "legendFormat": "Active Sessions"
-        }
+        {"expr":"rate(fivegs_amffunction_rm_reginitreq[1m])*60","legendFormat":"Initial Reg Req/min","refId":"A"},
+        {"expr":"rate(fivegs_amffunction_rm_reginitsucc[1m])*60","legendFormat":"Initial Reg Succ/min","refId":"B"},
+        {"expr":"rate(fivegs_amffunction_rm_regperiodreq[1m])*60","legendFormat":"Periodic Reg Req/min","refId":"C"},
+        {"expr":"rate(fivegs_amffunction_rm_regperiodsucc[1m])*60","legendFormat":"Periodic Reg Succ/min","refId":"D"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 50 },
-              { "color": "red", "value": 100 }
-            ]
-          }
-        }
-      }
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":15,"spanNulls":true,"showPoints":"auto","pointSize":5}}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","max"]}}
     },
     {
-      "title": "5G Core — PDU Sessions",
-      "type": "stat",
-      "gridPos": { "h": 6, "w": 8, "x": 8, "y": 0 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "title": "AMF — Cumulative Registration Counters", "type": "timeseries", "id": 11,
+      "gridPos": {"h":8,"w":12,"x":12,"y":7},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
       "targets": [
-        {
-          "expr": "smf_session_total",
-          "legendFormat": "PDU Sessions"
-        }
-      ]
-    },
-    {
-      "title": "UPF — Throughput (bytes/sec)",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 6 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "rate(upf_session_rx_bytes_total[1m])",
-          "legendFormat": "RX bytes/s"
-        },
-        {
-          "expr": "rate(upf_session_tx_bytes_total[1m])",
-          "legendFormat": "TX bytes/s"
-        }
-      ]
-    },
-    {
-      "title": "Host — CPU Usage",
-      "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
-          "legendFormat": "CPU %"
-        }
-      ]
-    },
-    {
-      "title": "Host — Memory Usage",
-      "type": "gauge",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
-      "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "targets": [
-        {
-          "expr": "(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100",
-          "legendFormat": "Memory %"
-        }
+        {"expr":"fivegs_amffunction_rm_reginitreq","legendFormat":"Initial Reg Req","refId":"A"},
+        {"expr":"fivegs_amffunction_rm_reginitsucc","legendFormat":"Initial Reg Succ","refId":"B"},
+        {"expr":"fivegs_amffunction_rm_regmobreq","legendFormat":"Mobility Reg Req","refId":"C"},
+        {"expr":"fivegs_amffunction_rm_regmobsucc","legendFormat":"Mobility Reg Succ","refId":"D"}
       ],
-      "fieldConfig": {
-        "defaults": {
-          "max": 100,
-          "min": 0,
-          "thresholds": {
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 70 },
-              { "color": "red", "value": 90 }
-            ]
-          },
-          "unit": "percent"
-        }
-      }
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":10,"spanNulls":true}}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","max"]}}
+    },
+    {
+      "title": "AMF — RAN UEs & Sessions Over Time", "type": "timeseries", "id": 12,
+      "gridPos": {"h":8,"w":12,"x":0,"y":15},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"ran_ue","legendFormat":"RAN UEs","refId":"A"},
+        {"expr":"amf_session","legendFormat":"AMF Sessions","refId":"B"},
+        {"expr":"gnb","legendFormat":"Connected gNBs","refId":"C"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":20,"spanNulls":true,"showPoints":"auto","pointSize":5},"min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","min","max"]}}
+    },
+    {
+      "title": "AMF — 5G Paging Events", "type": "timeseries", "id": 13,
+      "gridPos": {"h":8,"w":12,"x":12,"y":15},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"rate(fivegs_amffunction_mm_paging5g[1m])*60","legendFormat":"Paging 5G/min","refId":"A"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"fixedColor":"orange","mode":"fixed"},"custom":{"lineWidth":2,"fillOpacity":25,"spanNulls":true},"min":0}},
+      "options": {"tooltip":{"mode":"single"},"legend":{"displayMode":"list","placement":"bottom"}}
+    },
+    { "collapsed": false, "gridPos": {"h":1,"w":24,"x":0,"y":23}, "id": 102, "title": "📦 SMF — PDU Session Management", "type": "row" },
+    {
+      "title": "SMF — PDU Session Creation Rate", "type": "timeseries", "id": 20,
+      "gridPos": {"h":8,"w":12,"x":0,"y":24},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"rate(fivegs_smffunction_sm_n4sessionestabreq[1m])*60","legendFormat":"N4 Session Estab Req/min","refId":"A"},
+        {"expr":"rate(fivegs_smffunction_sm_n4sessionreportsucc[1m])*60","legendFormat":"N4 Report Success/min","refId":"B"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":15,"spanNulls":true},"min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","max"]}}
+    },
+    {
+      "title": "SMF — Active Sessions & Bearers", "type": "timeseries", "id": 21,
+      "gridPos": {"h":8,"w":12,"x":12,"y":24},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"ues_active","legendFormat":"Active UEs","refId":"A"},
+        {"expr":"bearers_active","legendFormat":"Active Bearers","refId":"B"},
+        {"expr":"gtp_peers_active","legendFormat":"GTP Peers","refId":"C"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":20,"spanNulls":true,"showPoints":"auto","pointSize":5},"min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","min","max"]}}
+    },
+    { "collapsed": false, "gridPos": {"h":1,"w":24,"x":0,"y":32}, "id": 103, "title": "🚀 UPF — User Plane & Throughput", "type": "row" },
+    {
+      "title": "UPF — N3 GTP Packet Rate (pkts/sec)", "type": "timeseries", "id": 30,
+      "gridPos": {"h":8,"w":12,"x":0,"y":33},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"rate(fivegs_ep_n3_gtp_indatapktn3upf[1m])","legendFormat":"⬇ Incoming pkts/s (DL)","refId":"A"},
+        {"expr":"rate(fivegs_ep_n3_gtp_outdatapktn3upf[1m])","legendFormat":"⬆ Outgoing pkts/s (UL)","refId":"B"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":20,"spanNulls":true,"gradientMode":"scheme","showPoints":"auto","pointSize":5},"unit":"pps","min":0},
+        "overrides":[
+          {"matcher":{"id":"byName","options":"⬇ Incoming pkts/s (DL)"},"properties":[{"id":"color","value":{"fixedColor":"green","mode":"fixed"}}]},
+          {"matcher":{"id":"byName","options":"⬆ Outgoing pkts/s (UL)"},"properties":[{"id":"color","value":{"fixedColor":"blue","mode":"fixed"}}]}
+        ]},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","max","mean"]}}
+    },
+    {
+      "title": "UPF — Total N3 Packets (cumulative)", "type": "timeseries", "id": 31,
+      "gridPos": {"h":8,"w":12,"x":12,"y":33},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"fivegs_ep_n3_gtp_indatapktn3upf","legendFormat":"⬇ Total Incoming","refId":"A"},
+        {"expr":"fivegs_ep_n3_gtp_outdatapktn3upf","legendFormat":"⬆ Total Outgoing","refId":"B"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":10,"spanNulls":true},"unit":"short","min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","max"]}}
+    },
+    {
+      "title": "UPF — N4 Session Establishment", "type": "timeseries", "id": 32,
+      "gridPos": {"h":8,"w":12,"x":0,"y":41},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"fivegs_upffunction_sm_n4sessionestabreq","legendFormat":"N4 Estab Req","refId":"A"},
+        {"expr":"fivegs_upffunction_sm_n4sessionreport","legendFormat":"N4 Reports","refId":"B"},
+        {"expr":"fivegs_upffunction_sm_n4sessionreportsucc","legendFormat":"N4 Report Succ","refId":"C"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":10,"spanNulls":true},"min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","max"]}}
+    },
+    {
+      "title": "UPF — Session Count Over Time", "type": "timeseries", "id": 33,
+      "gridPos": {"h":8,"w":12,"x":12,"y":41},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"fivegs_upffunction_upf_sessionnbr","legendFormat":"UPF Active Sessions","refId":"A"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"fixedColor":"super-light-green","mode":"fixed"},"custom":{"lineWidth":3,"fillOpacity":30,"spanNulls":true,"gradientMode":"scheme","showPoints":"always","pointSize":6},"min":0}},
+      "options": {"tooltip":{"mode":"single"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","min","max","mean"]}}
+    },
+    { "collapsed": false, "gridPos": {"h":1,"w":24,"x":0,"y":49}, "id": 104, "title": "🖥️ Host — Infrastructure", "type": "row" },
+    {
+      "title": "Host — CPU Usage %", "type": "timeseries", "id": 40,
+      "gridPos": {"h":8,"w":8,"x":0,"y":50},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"100 - (avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)","legendFormat":"CPU %","refId":"A"}],
+      "fieldConfig": {"defaults":{"color":{"mode":"continuous-GrYlRd"},"custom":{"lineWidth":2,"fillOpacity":25,"gradientMode":"scheme","spanNulls":true,"thresholdsStyle":{"mode":"line+area"}},"max":100,"min":0,"unit":"percent","thresholds":{"steps":[{"color":"transparent","value":null},{"color":"red","value":80}]}}},
+      "options": {"tooltip":{"mode":"single"},"legend":{"displayMode":"list","placement":"bottom","calcs":["lastNotNull"]}}
+    },
+    {
+      "title": "Host — Memory", "type": "gauge", "id": 41,
+      "gridPos": {"h":8,"w":4,"x":8,"y":50},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100","legendFormat":"Memory %","refId":"A"}],
+      "fieldConfig": {"defaults":{"max":100,"min":0,"thresholds":{"steps":[{"color":"green","value":null},{"color":"yellow","value":70},{"color":"red","value":90}]},"unit":"percent"}},
+      "options": {"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":false,"showThresholdMarkers":true}
+    },
+    {
+      "title": "Host — Network Traffic", "type": "timeseries", "id": 42,
+      "gridPos": {"h":8,"w":12,"x":12,"y":50},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"sum(rate(node_network_receive_bytes_total{device!~\"lo|veth.*|br-.*\"}[1m]))","legendFormat":"⬇ RX bytes/s","refId":"A"},
+        {"expr":"sum(rate(node_network_transmit_bytes_total{device!~\"lo|veth.*|br-.*\"}[1m]))","legendFormat":"⬆ TX bytes/s","refId":"B"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":15,"spanNulls":true},"unit":"Bps","min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull","max","mean"]}}
+    },
+    {
+      "title": "Host — Load Average", "type": "timeseries", "id": 43,
+      "gridPos": {"h":8,"w":8,"x":0,"y":58},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"node_load1","legendFormat":"1m","refId":"A"},
+        {"expr":"node_load5","legendFormat":"5m","refId":"B"},
+        {"expr":"node_load15","legendFormat":"15m","refId":"C"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":2,"fillOpacity":10,"spanNulls":true},"min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"list","placement":"bottom","calcs":["lastNotNull"]}}
+    },
+    {
+      "title": "Host — Disk Usage", "type": "gauge", "id": 44,
+      "gridPos": {"h":8,"w":4,"x":8,"y":58},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [{"expr":"(1 - node_filesystem_avail_bytes{mountpoint=\"/\"} / node_filesystem_size_bytes{mountpoint=\"/\"}) * 100","legendFormat":"Disk %","refId":"A"}],
+      "fieldConfig": {"defaults":{"max":100,"min":0,"thresholds":{"steps":[{"color":"green","value":null},{"color":"yellow","value":75},{"color":"red","value":90}]},"unit":"percent"}},
+      "options": {"reduceOptions":{"calcs":["lastNotNull"]},"showThresholdLabels":false,"showThresholdMarkers":true}
+    },
+    {
+      "title": "Host — Memory Over Time", "type": "timeseries", "id": 45,
+      "gridPos": {"h":8,"w":12,"x":12,"y":58},
+      "datasource": {"type":"prometheus","uid":"prometheus"},
+      "targets": [
+        {"expr":"node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes","legendFormat":"Used","refId":"A"},
+        {"expr":"node_memory_MemAvailable_bytes","legendFormat":"Available","refId":"B"},
+        {"expr":"node_memory_Buffers_bytes + node_memory_Cached_bytes","legendFormat":"Buffers+Cache","refId":"C"}
+      ],
+      "fieldConfig": {"defaults":{"color":{"mode":"palette-classic"},"custom":{"lineWidth":1,"fillOpacity":30,"spanNulls":true,"stacking":{"mode":"normal"}},"unit":"bytes","min":0}},
+      "options": {"tooltip":{"mode":"multi","sort":"desc"},"legend":{"displayMode":"table","placement":"bottom","calcs":["lastNotNull"]}}
     }
   ],
   "schemaVersion": 39,
-  "tags": ["5g", "sp-labs", "telco"],
-  "templating": { "list": [] },
-  "time": { "from": "now-1h", "to": "now" },
-  "timepicker": {},
+  "tags": ["5g","sp-labs","telco","open5gs"],
+  "templating": {"list":[]},
+  "time": {"from":"now-1h","to":"now"},
+  "timepicker": {"refresh_intervals":["5s","10s","15s","30s","1m"]},
   "timezone": "browser",
   "title": "SP-Labs — 5G Core Overview",
   "uid": "sp-labs-5g-core",
-  "version": 1
+  "version": 2
 }
