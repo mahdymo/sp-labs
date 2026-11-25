@@ -1,0 +1,394 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>SP-Labs Architecture Portal</title><style>
+*{margin:0;padding:0;box-sizing:border-box}:root{--bg:#0a0e17;--bg2:#111827;--card:#151d2e;--border:#1e2d45;--border2:#2a3f63;--text:#e2e8f0;--muted:#8899b4;--dim:#5a6a85;--accent:#3b82f6;--accent2:#60a5fa;--green:#10b981;--red:#ef4444;--amber:#f59e0b;--purple:#8b5cf6;--cyan:#06b6d4;--orange:#f97316;--pink:#ec4899;--radius:10px;--rr:6px;--font:'Segoe UI',system-ui,sans-serif;--mono:'Cascadia Code','Fira Code',monospace}
+html{font-size:14px}body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+header{background:linear-gradient(135deg,#0f172a,#1e293b);border-bottom:1px solid var(--border);padding:18px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}header h1{font-size:1.35rem;font-weight:700}header h1 span{color:var(--accent2)}.hr{display:flex;gap:12px;align-items:center}
+.badge{font-size:.7rem;padding:3px 10px;border-radius:20px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}.bb{background:rgba(59,130,246,.15);color:var(--accent2);border:1px solid rgba(59,130,246,.3)}.bg{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25)}
+.tn{display:flex;gap:2px;padding:0 32px;background:var(--bg2);border-bottom:1px solid var(--border)}.tb{padding:12px 22px;font-size:.82rem;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:.2s}.tb:hover{color:var(--text)}.tb.active{color:var(--accent2);border-bottom-color:var(--accent)}
+.tc{display:none;padding:28px 32px;animation:fadeIn .35s}.tc.active{display:block}@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px;transition:.2s}.card:hover{border-color:var(--border2);box-shadow:0 4px 24px rgba(0,0,0,.4)}
+.ct{font-size:.95rem;font-weight:700;margin-bottom:12px}.hint{font-size:.75rem;color:var(--dim);margin-bottom:10px}.dw{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}svg text{font-family:var(--font)}
+.tip{position:fixed;z-index:200;background:#1e293b;border:1px solid var(--border2);border-radius:var(--rr);padding:14px 18px;max-width:340px;font-size:.78rem;line-height:1.55;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.55);pointer-events:none;opacity:0;transition:opacity .18s}.tip.show{opacity:1}.tip h4{font-size:.85rem;margin-bottom:6px;color:var(--accent2)}.tip .ip{color:var(--cyan);font-family:var(--mono);font-size:.75rem}.tip .desc{color:var(--muted);margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;padding:14px 20px;background:var(--bg2);border-radius:var(--rr);margin-top:16px}.li{display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--muted)}.ld{width:10px;height:10px;border-radius:50%}
+table.t{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:10px}table.t th{text-align:left;color:var(--muted);font-weight:600;padding:8px 12px;border-bottom:1px solid var(--border);font-size:.72rem;text-transform:uppercase;letter-spacing:.4px}table.t td{padding:8px 12px;border-bottom:1px solid rgba(30,45,69,.5)}.t tr:hover td{background:rgba(59,130,246,.04)}.m{font-family:var(--mono);font-size:.76rem;color:var(--cyan)}
+.nr{display:grid;grid-template-columns:140px 150px 1fr;gap:12px;padding:10px 14px;border-radius:var(--rr);margin-bottom:4px;font-size:.8rem;align-items:center}.nr:nth-child(odd){background:rgba(255,255,255,.02)}.nl{font-weight:600;display:flex;align-items:center;gap:6px}
+.sg{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}.sc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}.sc.c1::before{background:linear-gradient(90deg,var(--green),var(--cyan))}.sc.c2::before{background:linear-gradient(90deg,var(--red),var(--orange))}.sc.c3::before{background:linear-gradient(90deg,var(--purple),var(--pink))}.sc.c4::before{background:linear-gradient(90deg,var(--amber),var(--orange))}.sc h3{font-size:.88rem;margin-bottom:8px}.sc p{font-size:.78rem;color:var(--muted);line-height:1.5}.sc code{font-family:var(--mono);font-size:.72rem;color:var(--cyan);background:rgba(6,182,212,.08);padding:1px 5px;border-radius:3px}
+@keyframes flowR{0%{stroke-dashoffset:20}100%{stroke-dashoffset:0}}.fl{stroke-dasharray:6 4;animation:flowR .8s linear infinite}@keyframes flowL{0%{stroke-dashoffset:-20}100%{stroke-dashoffset:0}}.flr{stroke-dasharray:6 4;animation:flowL .8s linear infinite}
+@media(max-width:900px){.tn{overflow-x:auto;padding:0 16px}.tc{padding:16px}header{padding:14px 16px}}
+</style></head><body>
+<header><h1>&#x1F3D7;&#xFE0F; <span>SP-Labs</span> — Architecture Portal</h1><div class="hr"><span class="badge bb">5G SA</span><span class="badge bg">v1.4</span></div></header>
+<nav class="tn"><button class="tb active" data-tab="overview">&#x1F5FA;&#xFE0F; Full Topology</button><button class="tb" data-tab="bigip">&#x1F6E1;&#xFE0F; BIG-IP Integration</button><button class="tb" data-tab="networks">&#x1F310; Networks &amp; IPs</button><button class="tb" data-tab="flows">&#x26A1; Traffic Flows</button><button class="tb" data-tab="commands">&#x2328;&#xFE0F; Quick Commands</button></nav>
+<div class="tc active" id="tab-overview"><div class="card"><div class="ct">SP-Labs 5G SA Architecture — End-to-End</div><p class="hint">Hover over any component for details · Click to pin tooltip</p><div class="dw"><svg viewBox="0 0 1200 620" width="100%" style="display:block">
+<defs><marker id="a2" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#10b981"/></marker><marker id="a3" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#f97316"/></marker></defs>
+<rect width="1200" height="620" fill="#0a0e17"/>
+<rect x="20" y="55" width="880" height="540" rx="14" fill="none" stroke="#1e2d45" stroke-width="1.5" stroke-dasharray="8 4"/>
+<text x="40" y="82" fill="#5a6a85" font-size="11" font-weight="600" text-anchor="start">DOCKER HOST (Ubuntu)</text>
+<line x1="140" y1="175" x2="750" y2="175" stroke="#2a3f63" stroke-width="2" stroke-dasharray="4 3"/>
+<text x="420" y="168" fill="#5a6a85" font-size="9" font-weight="600" text-anchor="middle">SBI BUS · 10.33.33.0/24</text>
+<g data-nf="nrf"><rect x="100" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="134" y="207" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">NRF</text></g>
+<g data-nf="scp"><rect x="182" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="216" y="207" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">SCP</text></g>
+<g data-nf="amf"><rect x="264" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.3"/><text x="298" y="207" text-anchor="middle" fill="#a78bfa" font-size="10.5" font-weight="700">AMF</text></g>
+<g data-nf="smf"><rect x="346" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.3"/><text x="380" y="207" text-anchor="middle" fill="#a78bfa" font-size="10.5" font-weight="700">SMF</text></g>
+<g data-nf="ausf"><rect x="428" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="462" y="207" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">AUSF</text></g>
+<g data-nf="udm"><rect x="510" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="544" y="207" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">UDM</text></g>
+<g data-nf="udr"><rect x="592" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="626" y="207" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">UDR</text></g>
+<g data-nf="pcf"><rect x="674" y="186" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="708" y="207" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">PCF</text></g>
+<g data-nf="nssf"><rect x="264" y="232" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="298" y="253" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">NSSF</text></g>
+<g data-nf="bsf"><rect x="346" y="232" width="68" height="34" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.3"/><text x="380" y="253" text-anchor="middle" fill="#60a5fa" font-size="10.5" font-weight="700">BSF</text></g>
+<g data-nf="mongodb"><rect x="592" y="232" width="90" height="34" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.3"/><text x="637" y="253" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="700">MongoDB</text></g>
+<g data-nf="webui"><rect x="698" y="232" width="82" height="34" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.3"/><text x="739" y="253" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="700">WebUI</text></g>
+<rect x="40" y="310" width="210" height="200" rx="10" fill="rgba(139,92,246,.05)" stroke="#4c1d95" stroke-width="1" stroke-dasharray="6 3"/>
+<text x="55" y="332" fill="#8b5cf6" font-size="10" font-weight="600" text-anchor="start">UERANSIM</text>
+<g data-nf="gnb"><rect x="120" y="348" width="100" height="40" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.3"/><text x="170" y="372" text-anchor="middle" fill="#10b981" font-size="11" font-weight="700">gNB</text></g>
+<g data-nf="ue"><rect x="60" y="430" width="80" height="40" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.3"/><text x="100" y="454" text-anchor="middle" fill="#06b6d4" font-size="10.5" font-weight="700">UEs</text></g>
+<line x1="100" y1="430" x2="150" y2="388" stroke="#06b6d4" stroke-width="1.2" opacity=".5"/>
+<line x1="220" y1="362" x2="298" y2="220" stroke="#8b5cf6" stroke-width="1.5"/>
+<text x="250" y="288" fill="#8b5cf6" font-size="8.5" font-weight="600" transform="rotate(-55 250 288)">N2 NGAP</text>
+<g data-nf="upf"><rect x="380" y="348" width="120" height="50" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="2"/><text x="440" y="371" text-anchor="middle" fill="#10b981" font-size="12" font-weight="700">UPF</text><text x="440" y="386" text-anchor="middle" fill="#5a6a85" font-size="8">10.33.37.14</text></g>
+<line x1="220" y1="372" x2="380" y2="372" stroke="#10b981" stroke-width="1.8" class="fl" marker-end="url(#a2)"/>
+<text x="300" y="365" fill="#10b981" font-size="8.5" font-weight="600" text-anchor="middle">N3 GTP-U</text>
+<line x1="380" y1="203" x2="420" y2="348" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="388" y="280" fill="#f59e0b" font-size="8" font-weight="600" text-anchor="start">N4</text>
+<line x1="500" y1="373" x2="590" y2="373" stroke="#10b981" stroke-width="2" class="fl" marker-end="url(#a2)"/>
+<text x="545" y="365" fill="#10b981" font-size="8.5" font-weight="600" text-anchor="middle">N6</text>
+<rect x="590" y="352" width="90" height="42" rx="6" fill="rgba(16,185,129,.06)" stroke="#10b981" stroke-width="1.2" stroke-dasharray="4 2"/>
+<text x="635" y="370" fill="#10b981" font-size="8.5" font-weight="600" text-anchor="middle">N6 Bridge</text>
+<text x="635" y="383" fill="#5a6a85" font-size="7.5" font-weight="600" text-anchor="middle">10.33.37.1</text>
+<line x1="680" y1="373" x2="920" y2="373" stroke="#f97316" stroke-width="2" class="fl" marker-end="url(#a3)"/>
+<text x="800" y="365" fill="#f97316" font-size="8" font-weight="600" text-anchor="middle">Transit 10.1.10.0/24</text>
+<rect x="920" y="90" width="260" height="490" rx="14" fill="rgba(239,68,68,.03)" stroke="#ef4444" stroke-width="1.5"/>
+<text x="940" y="118" fill="#ef4444" font-size="12" font-weight="700" text-anchor="start">F5 BIG-IP</text>
+<text x="940" y="134" fill="#5a6a85" font-size="8.5" font-weight="400" text-anchor="start">External VM · 10.1.10.200</text>
+<rect x="940" y="150" width="220" height="32" rx="5" fill="rgba(6,182,212,.06)" stroke="#06b6d4" stroke-width="1"/>
+<text x="1050" y="171" fill="#06b6d4" font-size="9" font-weight="600" text-anchor="middle">Internal: 10.1.10.200/24</text>
+<g data-nf="cgnat"><rect x="940" y="200" width="220" height="55" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/><text x="960" y="222" fill="#10b981" font-size="10.5" font-weight="700">CGNAT</text><text x="960" y="237" fill="#5a6a85" font-size="8">vs_cgnat · snatpool_cgnat</text><text x="960" y="249" fill="#5a6a85" font-size="7.5">SNAT: 198.51.100.10-13</text></g>
+<g data-nf="afm"><rect x="940" y="268" width="220" height="55" rx="8" fill="#1e293b" stroke="#ef4444" stroke-width="1.5"/><text x="960" y="290" fill="#ef4444" font-size="10.5" font-weight="700">AFM Firewall</text><text x="960" y="305" fill="#5a6a85" font-size="8">policy_gi_lan · 5 rules</text></g>
+<g data-nf="dns"><rect x="940" y="336" width="220" height="50" rx="8" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.5"/><text x="960" y="358" fill="#8b5cf6" font-size="10.5" font-weight="700">DNS Proxy</text><text x="960" y="373" fill="#5a6a85" font-size="8">vs_dns · 10.1.10.200:53</text></g>
+<g data-nf="telemetry"><rect x="940" y="400" width="220" height="42" rx="8" fill="#1e293b" stroke="#f59e0b" stroke-width="1.2"/><text x="960" y="420" fill="#f59e0b" font-size="10" font-weight="700">Telemetry Streaming</text><text x="960" y="434" fill="#5a6a85" font-size="8">Prometheus Pull · :443</text></g>
+<rect x="940" y="460" width="220" height="32" rx="5" fill="rgba(249,115,22,.06)" stroke="#f97316" stroke-width="1"/>
+<text x="1050" y="481" fill="#f97316" font-size="9" font-weight="600" text-anchor="middle">External: 198.51.100.200/24</text>
+<line x1="1050" y1="492" x2="1050" y2="540" stroke="#f97316" stroke-width="2" class="fl" marker-end="url(#a3)"/>
+<rect x="990" y="540" width="120" height="34" rx="8" fill="rgba(249,115,22,.08)" stroke="#f97316" stroke-width="1.2"/>
+<text x="1050" y="562" fill="#f97316" font-size="11" font-weight="700" text-anchor="middle">Internet</text>
+<rect x="560" y="450" width="310" height="120" rx="10" fill="rgba(249,115,22,.03)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="6 3"/>
+<text x="575" y="472" fill="#f59e0b" font-size="9.5" font-weight="600" text-anchor="start">MONITORING</text>
+<g data-nf="prometheus"><rect x="575" y="484" width="86" height="34" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.3"/><text x="618" y="505" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="700">Prometheus</text></g>
+<g data-nf="grafana"><rect x="675" y="484" width="76" height="34" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.3"/><text x="713" y="505" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="700">Grafana</text></g>
+<rect x="765" y="484" width="90" height="34" rx="6" fill="#1e293b" stroke="#f59e0b" stroke-width="1.2"/>
+<text x="810" y="506" fill="#f59e0b" font-size="8" font-weight="600" text-anchor="middle">Node Exp.</text>
+<line x1="661" y1="494" x2="940" y2="421" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 3" opacity=".4"/>
+<text x="800" y="452" fill="#f59e0b" font-size="7" font-weight="500" text-anchor="middle">TS scrape</text>
+</svg></div>
+<div class="legend">
+<div class="li"><div class="ld" style="background:#3b82f6"></div> SBI NFs</div>
+<div class="li"><div class="ld" style="background:#8b5cf6"></div> Control Plane</div>
+<div class="li"><div class="ld" style="background:#10b981"></div> User Plane</div>
+<div class="li"><div class="ld" style="background:#06b6d4"></div> UE Devices</div>
+<div class="li"><div class="ld" style="background:#ef4444"></div> F5 BIG-IP</div>
+<div class="li"><div class="ld" style="background:#f59e0b"></div> Monitoring</div>
+<div class="li"><div class="ld" style="background:#f97316"></div> Internet</div>
+</div></div></div>
+<div class="tc" id="tab-bigip"><div class="card"><div class="ct">BIG-IP N6 / Gi-LAN Insertion Point</div><div class="dw"><svg viewBox="0 0 1000 300" width="100%" style="display:block">
+<defs><marker id="b1" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#10b981"/></marker><marker id="b2" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#f97316"/></marker></defs>
+<rect width="1000" height="300" fill="#0a0e17"/>
+<rect x="30" y="100" width="90" height="100" rx="8" fill="#1e293b" stroke="#06b6d4" stroke-width="1.5"/>
+<text x="75" y="130" fill="#06b6d4" font-size="11" font-weight="700" text-anchor="middle">UEs</text>
+<text x="75" y="150" fill="#5a6a85" font-size="8" font-weight="600" text-anchor="middle">10.45.0.0/16</text>
+<text x="75" y="168" fill="#5a6a85" font-size="7.5" font-weight="600" text-anchor="middle">Basic · Power · IoT · Ent.</text>
+<rect x="170" y="120" width="80" height="60" rx="8" fill="#1e293b" stroke="#10b981" stroke-width="1.5"/>
+<text x="210" y="150" fill="#10b981" font-size="11" font-weight="700" text-anchor="middle">gNB</text>
+<text x="210" y="168" fill="#5a6a85" font-size="8" font-weight="600" text-anchor="middle">10.33.35.100</text>
+<line x1="120" y1="150" x2="170" y2="150" stroke="#06b6d4" stroke-width="1.5" class="fl" marker-end="url(#b1)"/>
+<rect x="300" y="110" width="110" height="80" rx="10" fill="#1e293b" stroke="#10b981" stroke-width="2"/>
+<text x="355" y="140" fill="#10b981" font-size="13" font-weight="700" text-anchor="middle">UPF</text>
+<text x="355" y="158" fill="#5a6a85" font-size="8.5" font-weight="600" text-anchor="middle">N6: 10.33.37.14</text>
+<text x="355" y="172" fill="#5a6a85" font-size="7.5" font-weight="600" text-anchor="middle">ogstun + TUN</text>
+<line x1="250" y1="150" x2="300" y2="150" stroke="#10b981" stroke-width="2" class="fl" marker-end="url(#b1)"/>
+<text x="275" y="142" fill="#10b981" font-size="8" font-weight="600" text-anchor="middle">N3</text>
+<rect x="460" y="125" width="80" height="50" rx="6" fill="rgba(16,185,129,.06)" stroke="#10b981" stroke-width="1.2" stroke-dasharray="4 2"/>
+<text x="500" y="148" fill="#10b981" font-size="9" font-weight="600" text-anchor="middle">Bridge</text>
+<text x="500" y="163" fill="#5a6a85" font-size="7.5" font-weight="600" text-anchor="middle">10.33.37.1</text>
+<line x1="410" y1="150" x2="460" y2="150" stroke="#10b981" stroke-width="2" class="fl" marker-end="url(#b1)"/>
+<text x="435" y="142" fill="#10b981" font-size="8" font-weight="600" text-anchor="middle">N6</text>
+<line x1="540" y1="150" x2="615" y2="150" stroke="#f97316" stroke-width="2.5" class="fl"/>
+<text x="577" y="140" fill="#f97316" font-size="8.5" font-weight="700" text-anchor="middle">10.1.10.0/24</text>
+<text x="577" y="170" fill="#5a6a85" font-size="7" font-weight="600" text-anchor="middle">Transit Network</text>
+<rect x="615" y="40" width="230" height="230" rx="12" fill="rgba(239,68,68,.04)" stroke="#ef4444" stroke-width="2"/>
+<text x="635" y="68" fill="#ef4444" font-size="12" font-weight="700" text-anchor="start">BIG-IP</text>
+<text x="635" y="84" fill="#5a6a85" font-size="8" font-weight="400" text-anchor="start">self_internal: 10.1.10.200</text>
+<rect x="635" y="96" width="190" height="28" rx="5" fill="rgba(0,0,0,.1)" stroke="#10b981" stroke-width="1"/>
+<text x="730" y="115" fill="#10b981" font-size="9" font-weight="600" text-anchor="middle">CGNAT snatpool_cgnat</text>
+<rect x="635" y="132" width="190" height="28" rx="5" fill="rgba(0,0,0,.1)" stroke="#ef4444" stroke-width="1"/>
+<text x="730" y="151" fill="#ef4444" font-size="9" font-weight="600" text-anchor="middle">AFM policy_gi_lan</text>
+<rect x="635" y="168" width="190" height="28" rx="5" fill="rgba(0,0,0,.1)" stroke="#8b5cf6" stroke-width="1"/>
+<text x="730" y="187" fill="#8b5cf6" font-size="9" font-weight="600" text-anchor="middle">DNS vs_dns :53</text>
+<rect x="635" y="204" width="190" height="28" rx="5" fill="rgba(0,0,0,.1)" stroke="#f59e0b" stroke-width="1"/>
+<text x="730" y="223" fill="#f59e0b" font-size="9" font-weight="600" text-anchor="middle">Telemetry Prometheus</text>
+<text x="730" y="258" fill="#f97316" font-size="8" font-weight="600" text-anchor="middle">External: 198.51.100.200</text>
+<line x1="845" y1="150" x2="905" y2="150" stroke="#f97316" stroke-width="2.5" class="fl" marker-end="url(#b2)"/>
+<rect x="905" y="125" width="80" height="50" rx="8" fill="rgba(249,115,22,.08)" stroke="#f97316" stroke-width="1.5"/>
+<text x="945" y="155" fill="#f97316" font-size="11" font-weight="700" text-anchor="middle">Internet</text>
+<text x="577" y="210" fill="#5a6a85" font-size="7.5" font-weight="600" text-anchor="middle">Return: 10.45.0.0/16 via 10.33.37.1</text>
+<line x1="615" y1="195" x2="540" y2="195" stroke="#5a6a85" stroke-width="1" stroke-dasharray="3 2" class="flr"/>
+</svg></div></div>
+<div class="card"><div class="ct">BIG-IP Services at N6</div><div class="sg">
+<div class="sc c1"><h3>CGNAT</h3><p>Translates UE addresses (<code>10.45.0.0/16</code>) to public IPs via SNAT pool.</p>
+<table class="t"><tr><td>VS</td><td class="m">vs_cgnat (0.0.0.0:0)</td></tr><tr><td>Profile</td><td class="m">fastl4_cgnat</td></tr><tr><td>SNAT Pool</td><td class="m">198.51.100.10-13</td></tr><tr><td>Source</td><td class="m">10.45.0.0/16</td></tr></table></div>
+<div class="sc c2"><h3>AFM Firewall</h3><p>Gi-LAN firewall policy for subscriber traffic.</p>
+<table class="t"><tr><td style="color:#10b981">&#10003; allow_dns</td><td>TCP/UDP :53</td></tr><tr><td style="color:#10b981">&#10003; allow_web</td><td>TCP :80,:443</td></tr><tr><td style="color:#10b981">&#10003; allow_icmp</td><td>ICMP</td></tr><tr><td style="color:#10b981">&#10003; allow_ntp</td><td>UDP :123</td></tr><tr><td style="color:#ef4444">&#10007; deny_all</td><td>Drop+log</td></tr></table></div>
+<div class="sc c3"><h3>DNS Proxy</h3><p>Transparent DNS proxy — logging, filtering, analytics.</p>
+<table class="t"><tr><td>UDP</td><td class="m">vs_dns_udp 10.1.10.200:53</td></tr><tr><td>TCP</td><td class="m">vs_dns_tcp 10.1.10.200:53</td></tr><tr><td>Upstream</td><td class="m">8.8.8.8, 8.8.4.4</td></tr><tr><td>SMF</td><td>Change dns[0] in <code>smf.yaml</code></td></tr></table></div>
+<div class="sc c4"><h3>Telemetry Streaming</h3><p>Exports BIG-IP metrics to Prometheus.</p>
+<table class="t"><tr><td>Method</td><td>Prometheus Pull</td></tr><tr><td>Endpoint</td><td class="m">:443/mgmt/shared/telemetry/...</td></tr><tr><td>Job</td><td class="m">bigip-gi-lan</td></tr><tr><td>Status</td><td>Commented out</td></tr></table></div>
+</div></div></div>
+<div class="tc" id="tab-networks">
+<div class="card"><div class="ct">Docker Network Subnets</div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#3b82f6"></span> SBI</span><span class="m">10.33.33.0/24</span><span style="color:var(--muted)">Service-Based Interface (HTTP/2)</span></div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#8b5cf6"></span> N2</span><span class="m">10.33.34.0/24</span><span style="color:var(--muted)">gNB-AMF control (NGAP/SCTP)</span></div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#10b981"></span> N3</span><span class="m">10.33.35.0/24</span><span style="color:var(--muted)">gNB-UPF user plane (GTP-U)</span></div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#f59e0b"></span> N4</span><span class="m">10.33.36.0/24</span><span style="color:var(--muted)">SMF-UPF session mgmt (PFCP)</span></div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#10b981"></span> N6</span><span class="m">10.33.37.0/24</span><span style="color:var(--muted)">UPF-Data Network / BIG-IP</span></div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#5a6a85"></span> MGMT</span><span class="m">10.33.38.0/24</span><span style="color:var(--muted)">Management, monitoring</span></div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#f97316"></span> Transit</span><span class="m">10.1.10.0/24</span><span style="color:var(--muted)">Docker host-BIG-IP bridge</span></div>
+<div class="nr"><span class="nl"><span class="ld" style="background:#06b6d4"></span> UE Pool</span><span class="m">10.45.0.0/16</span><span style="color:var(--muted)">UE IPs (assigned by SMF)</span></div>
+</div>
+<div class="card"><div class="ct">5G Core IP Assignments</div>
+<table class="t"><thead><tr><th>Container</th><th>SBI</th><th>N2</th><th>N3</th><th>N4</th><th>N6</th><th>MGMT</th></tr></thead><tbody>
+<tr><td>mongodb</td><td class="m">.33.2</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>nrf</td><td class="m">.33.10</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="m">.38.10</td></tr>
+<tr><td>scp</td><td class="m">.33.11</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>amf</td><td class="m">.33.12</td><td class="m">.34.12</td><td>-</td><td>-</td><td>-</td><td class="m">.38.12</td></tr>
+<tr><td>smf</td><td class="m">.33.13</td><td>-</td><td>-</td><td class="m">.36.13</td><td>-</td><td class="m">.38.13</td></tr>
+<tr><td><b>upf</b></td><td>-</td><td>-</td><td class="m">.35.14</td><td class="m">.36.14</td><td class="m" style="color:#10b981"><b>.37.14</b></td><td class="m">.38.14</td></tr>
+<tr><td>ausf</td><td class="m">.33.15</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>udm</td><td class="m">.33.16</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>udr</td><td class="m">.33.17</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>pcf</td><td class="m">.33.18</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>nssf</td><td class="m">.33.19</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>bsf</td><td class="m">.33.20</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>webui</td><td class="m">.33.21</td><td>-</td><td>-</td><td>-</td><td>-</td><td class="m">.38.21</td></tr>
+</tbody></table></div>
+<div class="card"><div class="ct">UERANSIM &amp; Monitoring</div>
+<table class="t"><thead><tr><th>Container</th><th>N2</th><th>N3</th><th>MGMT</th><th>Role</th></tr></thead><tbody>
+<tr><td>gnb</td><td class="m">.34.100</td><td class="m">.35.100</td><td class="m">.38.100</td><td>5G Base Station</td></tr>
+<tr><td>ue</td><td>-</td><td>-</td><td class="m">.38.101</td><td>Basic UEs (x5)</td></tr>
+<tr><td>prometheus</td><td>-</td><td>-</td><td class="m">.38.200</td><td>Metrics (:9090)</td></tr>
+<tr><td>grafana</td><td>-</td><td>-</td><td class="m">.38.201</td><td>Dashboards (:3000)</td></tr>
+<tr><td>node-exporter</td><td>-</td><td>-</td><td class="m">.38.202</td><td>Host metrics</td></tr>
+</tbody></table></div>
+<div class="card"><div class="ct">BIG-IP Reserved IPs</div>
+<table class="t"><thead><tr><th>Network</th><th>IP</th><th>Interface</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>Transit</td><td class="m" style="color:#ef4444"><b>10.1.10.200</b></td><td>Internal</td><td>Primary N6 insertion</td></tr>
+<tr><td>sp-labs-n6</td><td class="m">10.33.37.200</td><td>Internal</td><td>Direct N6 (alt)</td></tr>
+<tr><td>sp-labs-mgmt</td><td class="m">10.33.38.250</td><td>Management</td><td>GUI, SSH, iControl</td></tr>
+</tbody></table></div></div>
+<div class="tc" id="tab-flows">
+<div class="card"><div class="ct">UE Registration &amp; PDU Session Flow</div><div class="dw"><svg viewBox="0 0 1100 420" width="100%" style="display:block">
+<defs><marker id="f1" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#8b5cf6"/></marker><marker id="f2" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#10b981"/></marker><marker id="f3" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#3b82f6"/></marker></defs>
+<rect width="1100" height="420" fill="#0a0e17"/>
+<rect x="50" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.2"/>
+<text x="80" y="39" fill="#06b6d4" font-size="10" font-weight="700" text-anchor="middle">UE</text>
+<line x1="80" y1="52" x2="80" y2="400" stroke="#06b6d4" stroke-width=".6" opacity=".2"/>
+<rect x="190" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.2"/>
+<text x="220" y="39" fill="#10b981" font-size="10" font-weight="700" text-anchor="middle">gNB</text>
+<line x1="220" y1="52" x2="220" y2="400" stroke="#10b981" stroke-width=".6" opacity=".2"/>
+<rect x="340" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.2"/>
+<text x="370" y="39" fill="#8b5cf6" font-size="10" font-weight="700" text-anchor="middle">AMF</text>
+<line x1="370" y1="52" x2="370" y2="400" stroke="#8b5cf6" stroke-width=".6" opacity=".2"/>
+<rect x="470" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.2"/>
+<text x="500" y="39" fill="#3b82f6" font-size="10" font-weight="700" text-anchor="middle">AUSF</text>
+<line x1="500" y1="52" x2="500" y2="400" stroke="#3b82f6" stroke-width=".6" opacity=".2"/>
+<rect x="580" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.2"/>
+<text x="610" y="39" fill="#3b82f6" font-size="10" font-weight="700" text-anchor="middle">UDM</text>
+<line x1="610" y1="52" x2="610" y2="400" stroke="#3b82f6" stroke-width=".6" opacity=".2"/>
+<rect x="700" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#8b5cf6" stroke-width="1.2"/>
+<text x="730" y="39" fill="#8b5cf6" font-size="10" font-weight="700" text-anchor="middle">SMF</text>
+<line x1="730" y1="52" x2="730" y2="400" stroke="#8b5cf6" stroke-width=".6" opacity=".2"/>
+<rect x="830" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.2"/>
+<text x="860" y="39" fill="#10b981" font-size="10" font-weight="700" text-anchor="middle">UPF</text>
+<line x1="860" y1="52" x2="860" y2="400" stroke="#10b981" stroke-width=".6" opacity=".2"/>
+<rect x="960" y="20" width="60" height="28" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.2"/>
+<text x="990" y="39" fill="#ef4444" font-size="10" font-weight="700" text-anchor="middle">BIG-IP</text>
+<line x1="990" y1="52" x2="990" y2="400" stroke="#ef4444" stroke-width=".6" opacity=".2"/>
+<line x1="80" y1="70" x2="220" y2="70" stroke="#06b6d4" stroke-width="1.3" marker-end="url(#f3)"/>
+<text x="150" y="65" fill="#06b6d4" font-size="7.5" font-weight="500" text-anchor="middle">1. RRC Setup</text>
+<line x1="220" y1="90" x2="370" y2="90" stroke="#8b5cf6" stroke-width="1.3" marker-end="url(#f3)"/>
+<text x="295" y="85" fill="#8b5cf6" font-size="7.5" font-weight="500" text-anchor="middle">2. Registration Req (NAS)</text>
+<line x1="370" y1="110" x2="500" y2="110" stroke="#3b82f6" stroke-width="1.3" marker-end="url(#f3)"/>
+<text x="435" y="105" fill="#3b82f6" font-size="7.5" font-weight="500" text-anchor="middle">3. Auth Request</text>
+<line x1="500" y1="130" x2="610" y2="130" stroke="#3b82f6" stroke-width="1.3" marker-end="url(#f3)"/>
+<text x="555" y="125" fill="#3b82f6" font-size="7.5" font-weight="500" text-anchor="middle">4. Get Auth Data</text>
+<line x1="610" y1="150" x2="500" y2="150" stroke="#3b82f6" stroke-width="1.3" marker-end="url(#f1)"/>
+<text x="555" y="145" fill="#3b82f6" font-size="7.5" font-weight="500" text-anchor="middle">5. Auth Vector</text>
+<line x1="500" y1="170" x2="370" y2="170" stroke="#3b82f6" stroke-width="1.3" marker-end="url(#f1)"/>
+<text x="435" y="165" fill="#3b82f6" font-size="7.5" font-weight="500" text-anchor="middle">6. Auth Response</text>
+<line x1="370" y1="190" x2="220" y2="190" stroke="#8b5cf6" stroke-width="1.3" marker-end="url(#f1)"/>
+<text x="295" y="185" fill="#8b5cf6" font-size="7.5" font-weight="500" text-anchor="middle">7. Security Mode</text>
+<line x1="220" y1="210" x2="80" y2="210" stroke="#06b6d4" stroke-width="1.3" marker-end="url(#f1)"/>
+<text x="150" y="205" fill="#06b6d4" font-size="7.5" font-weight="500" text-anchor="middle">8. Security Complete</text>
+<line x1="370" y1="230" x2="220" y2="230" stroke="#8b5cf6" stroke-width="1.3" marker-end="url(#f1)"/>
+<text x="295" y="225" fill="#8b5cf6" font-size="7.5" font-weight="500" text-anchor="middle">9. Registration Accept</text>
+<rect x="40" y="260" width="1040" height="4" rx="2" fill="rgba(16,185,129,.15)"/>
+<text x="550" y="275" fill="#10b981" font-size="9" font-weight="700" text-anchor="middle">PDU Session Establishment</text>
+<line x1="80" y1="290" x2="220" y2="290" stroke="#10b981" stroke-width="1.3" marker-end="url(#f2)"/>
+<text x="150" y="285" fill="#10b981" font-size="7.5" font-weight="500" text-anchor="middle">10. PDU Session Req</text>
+<line x1="220" y1="310" x2="370" y2="310" stroke="#8b5cf6" stroke-width="1.3" marker-end="url(#f2)"/>
+<text x="295" y="305" fill="#8b5cf6" font-size="7.5" font-weight="500" text-anchor="middle">11. Fwd to AMF</text>
+<line x1="370" y1="330" x2="730" y2="330" stroke="#8b5cf6" stroke-width="1.3" marker-end="url(#f2)"/>
+<text x="550" y="325" fill="#8b5cf6" font-size="7.5" font-weight="500" text-anchor="middle">12. Create SM Context</text>
+<line x1="730" y1="350" x2="860" y2="350" stroke="#f59e0b" stroke-width="1.3" marker-end="url(#f2)"/>
+<text x="795" y="345" fill="#f59e0b" font-size="7.5" font-weight="500" text-anchor="middle">13. PFCP Session Est.</text>
+<line x1="860" y1="370" x2="730" y2="370" stroke="#f59e0b" stroke-width="1.3" marker-end="url(#f2)"/>
+<text x="795" y="365" fill="#f59e0b" font-size="7.5" font-weight="500" text-anchor="middle">14. PFCP Response</text>
+<line x1="730" y1="390" x2="370" y2="390" stroke="#8b5cf6" stroke-width="1.3" marker-end="url(#f2)"/>
+<text x="550" y="385" fill="#8b5cf6" font-size="7.5" font-weight="500" text-anchor="middle">15. PDU Accept</text>
+<line x1="370" y1="400" x2="220" y2="400" stroke="#8b5cf6" stroke-width="1.3" marker-end="url(#f2)"/>
+<text x="295" y="395" fill="#8b5cf6" font-size="7.5" font-weight="500" text-anchor="middle">16. RRC Reconfig</text>
+</svg></div></div>
+<div class="card"><div class="ct">Data Plane — UE to Internet via BIG-IP</div><div class="dw"><svg viewBox="0 0 1100 200" width="100%" style="display:block">
+<defs><marker id="d1" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#10b981"/></marker><marker id="d2" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto"><polygon points="0 0,7 2.5,0 5" fill="#f97316"/></marker></defs>
+<rect width="1100" height="200" fill="#0a0e17"/>
+<rect x="15" y="55" width="70" height="36" rx="6" fill="#1e293b" stroke="#06b6d4" stroke-width="1.3"/>
+<text x="50" y="78" fill="#06b6d4" font-size="9.5" font-weight="700" text-anchor="middle">UE</text>
+<line x1="85" y1="73" x2="165" y2="73" stroke="#10b981" stroke-width="1.5" class="fl" marker-end="url(#d1)"/>
+<rect x="165" y="55" width="70" height="36" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.3"/>
+<text x="200" y="78" fill="#10b981" font-size="9.5" font-weight="700" text-anchor="middle">gNB</text>
+<line x1="235" y1="73" x2="345" y2="73" stroke="#10b981" stroke-width="1.5" class="fl" marker-end="url(#d1)"/>
+<rect x="345" y="55" width="70" height="36" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.3"/>
+<text x="380" y="78" fill="#10b981" font-size="9.5" font-weight="700" text-anchor="middle">UPF</text>
+<line x1="415" y1="73" x2="495" y2="73" stroke="#10b981" stroke-width="1.5" class="fl" marker-end="url(#d1)"/>
+<rect x="495" y="55" width="70" height="36" rx="6" fill="#1e293b" stroke="#10b981" stroke-width="1.3"/>
+<text x="530" y="78" fill="#10b981" font-size="9.5" font-weight="700" text-anchor="middle">Bridge</text>
+<line x1="565" y1="73" x2="625" y2="73" stroke="#10b981" stroke-width="1.5" class="fl" marker-end="url(#d1)"/>
+<rect x="625" y="55" width="70" height="36" rx="6" fill="#1e293b" stroke="#f97316" stroke-width="1.3"/>
+<text x="660" y="78" fill="#f97316" font-size="9.5" font-weight="700" text-anchor="middle">Transit</text>
+<line x1="695" y1="73" x2="785" y2="73" stroke="#10b981" stroke-width="1.5" class="fl" marker-end="url(#d1)"/>
+<rect x="785" y="55" width="70" height="36" rx="6" fill="#1e293b" stroke="#ef4444" stroke-width="1.3"/>
+<text x="820" y="78" fill="#ef4444" font-size="9.5" font-weight="700" text-anchor="middle">BIG-IP</text>
+<line x1="855" y1="73" x2="955" y2="73" stroke="#10b981" stroke-width="1.5" class="fl" marker-end="url(#d1)"/>
+<rect x="955" y="55" width="70" height="36" rx="6" fill="#1e293b" stroke="#f97316" stroke-width="1.3"/>
+<text x="990" y="78" fill="#f97316" font-size="9.5" font-weight="700" text-anchor="middle">Internet</text>
+<text x="140" y="55" fill="#5a6a85" font-size="7.5" font-weight="600" text-anchor="middle">Radio</text>
+<text x="290" y="55" fill="#10b981" font-size="7.5" font-weight="600" text-anchor="middle">N3 GTP-U</text>
+<text x="455" y="55" fill="#10b981" font-size="7.5" font-weight="600" text-anchor="middle">N6</text>
+<text x="595" y="55" fill="#5a6a85" font-size="7.5" font-weight="600" text-anchor="middle">L2 Bridge</text>
+<text x="740" y="55" fill="#f97316" font-size="7.5" font-weight="600" text-anchor="middle">10.1.10.0/24</text>
+<text x="905" y="55" fill="#ef4444" font-size="7.5" font-weight="600" text-anchor="middle">CGNAT+AFM</text>
+<rect x="30" y="130" width="1050" height="1" fill="rgba(90,106,133,.2)"/>
+<text x="550" y="125" fill="#5a6a85" font-size="8" font-weight="500" text-anchor="middle">Return Path</text>
+<line x1="955" y1="145" x2="855" y2="145" stroke="#5a6a85" stroke-width="1" class="flr" stroke-dasharray="4 3"/>
+<line x1="785" y1="145" x2="695" y2="145" stroke="#5a6a85" stroke-width="1" class="flr" stroke-dasharray="4 3"/>
+<line x1="625" y1="145" x2="565" y2="145" stroke="#5a6a85" stroke-width="1" class="flr" stroke-dasharray="4 3"/>
+<line x1="495" y1="145" x2="415" y2="145" stroke="#5a6a85" stroke-width="1" class="flr" stroke-dasharray="4 3"/>
+<line x1="345" y1="145" x2="235" y2="145" stroke="#5a6a85" stroke-width="1" class="flr" stroke-dasharray="4 3"/>
+<line x1="165" y1="145" x2="85" y2="145" stroke="#5a6a85" stroke-width="1" class="flr" stroke-dasharray="4 3"/>
+<text x="550" y="165" fill="#5a6a85" font-size="8" font-weight="600" text-anchor="middle">UE IP preserved · BIG-IP static route: 10.45.0.0/16 via 10.33.37.1</text>
+</svg></div></div>
+<div class="card"><div class="ct">Key Protocol Summary</div>
+<table class="t"><thead><tr><th>Interface</th><th>Protocol</th><th>Peers</th><th>Purpose</th></tr></thead><tbody>
+<tr><td style="color:#8b5cf6">N1</td><td>NAS</td><td>UE ↔ AMF</td><td>Registration, authentication, session management</td></tr>
+<tr><td style="color:#8b5cf6">N2</td><td>NGAP/SCTP</td><td>gNB ↔ AMF</td><td>Control plane signaling</td></tr>
+<tr><td style="color:#10b981">N3</td><td>GTP-U/UDP</td><td>gNB ↔ UPF</td><td>User data tunneling</td></tr>
+<tr><td style="color:#f59e0b">N4</td><td>PFCP/UDP</td><td>SMF ↔ UPF</td><td>Session rules, QoS, forwarding</td></tr>
+<tr><td style="color:#10b981">N6</td><td>IP</td><td>UPF ↔ DN</td><td>Data Network interface (internet)</td></tr>
+<tr><td style="color:#3b82f6">SBI</td><td>HTTP/2</td><td>All NFs</td><td>Service discovery, registration, subscription</td></tr>
+</tbody></table></div></div>
+<div class="tc" id="tab-commands">
+<div class="card"><div class="ct">Quick Commands Reference</div>
+<table class="t"><thead><tr><th>Action</th><th>Command</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Start all</td><td class="m">make up</td><td>Brings up 5G core + RAN + monitoring</td></tr>
+<tr><td>Stop all</td><td class="m">make down</td><td>Graceful shutdown</td></tr>
+<tr><td>View logs</td><td class="m">make logs</td><td>Follow all container logs</td></tr>
+<tr><td>UE status</td><td class="m">docker exec ue nr-cli imsi-999700000000001 -e status</td><td>Check registration/PDU state</td></tr>
+<tr><td>Ping test</td><td class="m">docker exec ue ping -I uesimtun0 8.8.8.8 -c 4</td><td>Test data plane via UPF</td></tr>
+<tr><td>DNS test</td><td class="m">docker exec ue nslookup google.com 10.1.10.200</td><td>Test DNS via BIG-IP proxy</td></tr>
+<tr><td>UPF routes</td><td class="m">docker exec upf ip route</td><td>Verify N6 routing</td></tr>
+<tr><td>UPF interfaces</td><td class="m">docker exec upf ip addr show ogstun</td><td>Check TUN device</td></tr>
+<tr><td>Check NRF</td><td class="m">curl -s http://10.33.33.10:7777/nnrf-nfm/v1/nf-instances | jq</td><td>NF discovery status</td></tr>
+<tr><td>AMF SCTP</td><td class="m">docker exec amf ss -lnp | grep 38412</td><td>NGAP listener</td></tr>
+<tr><td>SMF sessions</td><td class="m">docker logs smf 2>&amp;1 | grep -i &quot;pdu session&quot;</td><td>PDU session creation</td></tr>
+<tr><td>PFCP status</td><td class="m">docker logs smf 2>&amp;1 | grep -i pfcp</td><td>SMF-UPF association</td></tr>
+<tr><td>BIG-IP tmsh</td><td class="m">tmsh list ltm virtual vs_cgnat</td><td>CGNAT virtual server</td></tr>
+<tr><td>BIG-IP pools</td><td class="m">tmsh list ltm snatpool snatpool_cgnat</td><td>SNAT pool members</td></tr>
+<tr><td>AFM rules</td><td class="m">tmsh list security firewall policy policy_gi_lan</td><td>Firewall rules</td></tr>
+<tr><td>TS status</td><td class="m">curl -sku admin:admin https://localhost/mgmt/shared/telemetry/declare</td><td>Telemetry declaration</td></tr>
+<tr><td>Prometheus</td><td class="m">curl http://localhost:9090/api/v1/targets</td><td>Scrape target status</td></tr>
+</tbody></table></div>
+
+<div class="card"><div class="ct">Web Interfaces</div>
+<table class="t"><thead><tr><th>Service</th><th>URL</th><th>Credentials</th></tr></thead><tbody>
+<tr><td>Open5GS WebUI</td><td class="m">http://&lt;host&gt;:9999</td><td class="m">admin / 1423</td></tr>
+<tr><td>Grafana</td><td class="m">http://&lt;host&gt;:3000</td><td class="m">admin / grafana</td></tr>
+<tr><td>Prometheus</td><td class="m">http://&lt;host&gt;:9090</td><td>No auth</td></tr>
+<tr><td>BIG-IP GUI</td><td class="m">https://10.33.38.250</td><td class="m">admin / &lt;configured&gt;</td></tr>
+<tr><td>BIG-IP SSH</td><td class="m">ssh admin@10.33.38.250</td><td>Key or password</td></tr>
+</tbody></table></div>
+
+<div class="card"><div class="ct">UE Subscriber Profiles</div>
+<table class="t"><thead><tr><th>Profile</th><th>IMSI Range</th><th>APN/DNN</th><th>QoS</th></tr></thead><tbody>
+<tr><td>Basic</td><td class="m">imsi-999700000000001 — 005</td><td class="m">internet</td><td>9 (default)</td></tr>
+<tr><td>Power User</td><td class="m">imsi-999700000000010 — 012</td><td class="m">internet</td><td>7 (priority)</td></tr>
+<tr><td>IoT</td><td class="m">imsi-999700000000020 — 022</td><td class="m">iot</td><td>9 (low BW)</td></tr>
+<tr><td>Enterprise</td><td class="m">imsi-999700000000030 — 032</td><td class="m">enterprise</td><td>5 (guaranteed)</td></tr>
+</tbody></table></div></div>
+<div class="tip" id="tooltip"></div>
+<script>
+// Tab switching
+document.querySelectorAll('.tb').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tb').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+}));
+
+// Tooltip data
+const meta={
+  nrf:{name:'NRF',ip:'10.33.33.10',desc:'Network Repository Function — NF discovery & registration'},
+  scp:{name:'SCP',ip:'10.33.33.11',desc:'Service Communication Proxy — SBI message routing'},
+  amf:{name:'AMF',ip:'10.33.33.12 / 10.33.34.12',desc:'Access & Mobility Management — registration, handover, N2 signaling'},
+  smf:{name:'SMF',ip:'10.33.33.13 / 10.33.36.13',desc:'Session Management — PDU sessions, QoS, PFCP to UPF'},
+  ausf:{name:'AUSF',ip:'10.33.33.15',desc:'Authentication Server Function — 5G-AKA'},
+  udm:{name:'UDM',ip:'10.33.33.16',desc:'Unified Data Management — subscriber profiles'},
+  udr:{name:'UDR',ip:'10.33.33.17',desc:'Unified Data Repository — subscription data store'},
+  pcf:{name:'PCF',ip:'10.33.33.18',desc:'Policy Control Function — QoS, charging rules'},
+  nssf:{name:'NSSF',ip:'10.33.33.19',desc:'Network Slice Selection Function'},
+  bsf:{name:'BSF',ip:'10.33.33.20',desc:'Binding Support Function — session binding'},
+  mongodb:{name:'MongoDB',ip:'10.33.33.2',desc:'Database — subscriber data, NF profiles'},
+  webui:{name:'WebUI',ip:'10.33.33.21',desc:'Open5GS management UI (:9999)'},
+  upf:{name:'UPF',ip:'10.33.35.14 / 10.33.36.14 / 10.33.37.14',desc:'User Plane Function — GTP-U decap, N6 forwarding, ogstun TUN'},
+  gnb:{name:'gNodeB',ip:'10.33.34.100 / 10.33.35.100',desc:'UERANSIM base station — N2/N3 termination'},
+  ue:{name:'UE Devices',ip:'10.45.0.x (assigned)',desc:'UERANSIM UEs — multiple subscriber profiles'},
+  cgnat:{name:'CGNAT',ip:'198.51.100.10-13',desc:'Carrier-Grade NAT — translates 10.45.0.0/16 to public pool'},
+  afm:{name:'AFM Firewall',ip:'N/A',desc:'Advanced Firewall Manager — Gi-LAN policy enforcement'},
+  dns:{name:'DNS Proxy',ip:'10.1.10.200:53',desc:'Transparent DNS — logging, analytics, filtering'},
+  telemetry:{name:'Telemetry Streaming',ip:':443',desc:'Exports BIG-IP stats to Prometheus'},
+  prometheus:{name:'Prometheus',ip:'10.33.38.200:9090',desc:'Metrics collection & alerting'},
+  grafana:{name:'Grafana',ip:'10.33.38.201:3000',desc:'Dashboards & visualization'},
+};
+const tip=document.getElementById('tooltip');
+let pinned=false;
+document.querySelectorAll('[data-nf]').forEach(el=>{
+  el.style.cursor='pointer';
+  el.addEventListener('mouseenter',e=>{
+    if(pinned)return;
+    const d=meta[el.dataset.nf];if(!d)return;
+    tip.innerHTML='<h4>'+d.name+'</h4><div class="ip">'+d.ip+'</div><div class="desc">'+d.desc+'</div>';
+    tip.classList.add('show');
+    pos(e);
+  });
+  el.addEventListener('mousemove',e=>{if(!pinned)pos(e)});
+  el.addEventListener('mouseleave',()=>{if(!pinned){tip.classList.remove('show')}});
+  el.addEventListener('click',e=>{
+    const d=meta[el.dataset.nf];if(!d)return;
+    pinned=!pinned;
+    if(pinned){
+      tip.innerHTML='<h4>'+d.name+'</h4><div class="ip">'+d.ip+'</div><div class="desc">'+d.desc+'</div>';
+      tip.classList.add('show');pos(e);
+    }else{tip.classList.remove('show')}
+  });
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('[data-nf]')&&pinned){pinned=false;tip.classList.remove('show')}
+});
+function pos(e){tip.style.left=Math.min(e.clientX+14,window.innerWidth-360)+'px';tip.style.top=(e.clientY+14)+'px'}
+</script>
+</body></html>

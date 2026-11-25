@@ -228,3 +228,12 @@ status: ## Show status of all lab containers
 	@docker compose -f 6g-lab/docker-compose.yml ps 2>/dev/null || echo "  Not deployed"
 	@echo -e "\n$(YELLOW)=== Monitoring ===$(NC)"
 	@docker compose -f monitoring/docker-compose.yml ps 2>/dev/null || echo "  Not deployed"
+
+# ==============================================================================
+# DOCS
+# ==============================================================================
+.PHONY: portal
+portal: ## Regenerate the interactive architecture portal (docs/portal/index.html)
+	@echo -e "$(GREEN)[DOCS]$(NC) Generating architecture portal..."
+	@cd docs/portal && node build.js
+	@echo -e "$(GREEN)[DOCS]$(NC) Portal ready → docs/portal/index.html"

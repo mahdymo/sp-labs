@@ -78,6 +78,7 @@ make test-6g    # 6G simulation environment check
 | [ARCHITECTURE.md](docs/ARCHITECTURE.md) | Detailed architecture and data flows |
 | [NETWORKING.md](docs/NETWORKING.md) | IP addressing, subnets, interface mapping |
 | [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common issues and resolution steps |
+| [Architecture Portal](docs/portal/index.html) | **🗺️ Interactive visual portal** — topology, flows, IPs, commands |
 
 ## Roadmap
 
