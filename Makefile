@@ -58,8 +58,8 @@ deploy-5g: init ## Deploy 5G lab (Open5GS + UERANSIM)
 	docker compose -f 5g-lab/docker-compose.yml --env-file .env up -d
 	@echo -e "$(GREEN)[5G]$(NC) Waiting for services to be healthy..."
 	@sleep 15
-	@echo -e "$(GREEN)[5G]$(NC) Registering default subscriber..."
-	@bash infrastructure/scripts/register-subscriber.sh || true
+	@echo -e "$(GREEN)[5G]$(NC) Registering subscribers (NUM_UES=${NUM_UES:-5})..."
+	@bash infrastructure/scripts/register-subscribers.sh ${NUM_UES:-5} || true
 	@echo -e "$(GREEN)[5G]$(NC) 5G Lab is UP"
 
 .PHONY: stop-5g
@@ -80,6 +80,83 @@ test-5g: ## Run 5G end-to-end test
 .PHONY: generate-traffic
 generate-traffic: ## Generate 5G traffic for Grafana dashboards (default: 5 min)
 	@bash infrastructure/scripts/generate-traffic.sh $(TRAFFIC_DURATION)
+
+# ==============================================================================
+# MULTI-UE
+# ==============================================================================
+.PHONY: register-subs
+register-subs: ## Register multiple subscribers in MongoDB (default: 10)
+	@bash infrastructure/scripts/register-subscribers.sh $(NUM_SUBS)
+
+.PHONY: register-multi-ue
+register-multi-ue: ## Register subscribers for all UE profiles (basic/power/iot/enterprise)
+	@bash infrastructure/scripts/register-multi-ue.sh $(NUM_UES)
+
+.PHONY: deploy-multi-ue
+deploy-multi-ue: register-multi-ue ## Deploy all UE profile containers + register subscribers
+	@echo -e "$(GREEN)[5G]$(NC) Starting multi-UE profile containers..."
+	docker compose -f 5g-lab/docker-compose.yml --env-file .env --profile multi-ue up -d
+	@echo -e "$(GREEN)[5G]$(NC) Waiting for UE registration..."
+	@sleep 20
+	@echo -e "$(GREEN)[5G]$(NC) Multi-UE deployment complete"
+	@docker compose -f 5g-lab/docker-compose.yml --env-file .env --profile multi-ue ps
+
+.PHONY: stop-multi-ue
+stop-multi-ue: ## Stop the profile UE containers (keeps base ue running)
+	docker compose -f 5g-lab/docker-compose.yml --env-file .env --profile multi-ue stop ue-power ue-iot ue-enterprise
+
+.PHONY: restart-ues
+restart-ues: ## Restart all UE containers (base + profiles) to pick up new subscribers
+	docker compose -f 5g-lab/docker-compose.yml --env-file .env restart ue
+	docker compose -f 5g-lab/docker-compose.yml --env-file .env --profile multi-ue restart ue-power ue-iot ue-enterprise 2>/dev/null || true
+	@echo -e "$(GREEN)[5G]$(NC) UEs restarted — waiting for registration..."
+	@sleep 15
+	@echo -e "$(GREEN)[5G]$(NC) UEs should be registered now"
+
+.PHONY: generate-multi-traffic
+generate-multi-traffic: ## Generate traffic from all UE profiles (default: 5 min)
+	@bash infrastructure/scripts/generate-multi-traffic.sh $(TRAFFIC_DURATION)
+
+.PHONY: ue-status
+ue-status: ## Show status of all UE tunnels and registrations
+	@echo ""
+	@echo "==========================================="
+	@echo "  SP-Labs — UE Status"
+	@echo "==========================================="
+	@for c in ue ue-power ue-iot ue-enterprise; do \
+	  if docker inspect -f '{{.State.Running}}' $$c 2>/dev/null | grep -q true; then \
+	    TUNS=$$(docker exec $$c ip -4 addr show 2>/dev/null | grep -c uesimtun || echo 0); \
+	    echo "  ✓ $$c: running, $$TUNS tunnel(s)"; \
+	    docker exec $$c ip -4 addr show 2>/dev/null | grep 'inet.*uesimtun' | \
+	      sed 's/^/      /' || true; \
+	  else \
+	    echo "  ✗ $$c: not running"; \
+	  fi; \
+	done
+	@echo ""
+	@echo "  Subscribers in MongoDB:"
+	@docker exec mongodb mongosh --quiet --eval \
+	  "db=db.getSiblingDB('open5gs');print('    Total: '+db.subscribers.countDocuments())" 2>/dev/null || true
+	@echo "==========================================="
+
+# ==============================================================================
+# BIG-IP INTEGRATION
+# ==============================================================================
+.PHONY: connect-bigip
+connect-bigip: ## Configure N6 routing: UPF → BIG-IP (CGNAT/AFM/DNS)
+	@bash infrastructure/scripts/configure-bigip-route.sh
+
+.PHONY: disconnect-bigip
+disconnect-bigip: ## Restore UPF default route to host (bypass BIG-IP)
+	@echo -e "$(YELLOW)[BIG-IP]$(NC) Restoring host-based routing..."
+	@docker exec upf ip route replace default via $$(docker exec upf ip route | grep -oP '10\.33\.37\.\d+' | head -1 || echo "10.33.37.1") 2>/dev/null || true
+	@sudo iptables -t nat -C POSTROUTING -s 10.45.0.0/16 ! -o ogstun -j MASQUERADE 2>/dev/null || \
+	  sudo iptables -t nat -A POSTROUTING -s 10.45.0.0/16 ! -o ogstun -j MASQUERADE
+	@echo -e "$(GREEN)[BIG-IP]$(NC) Host MASQUERADE restored — BIG-IP bypassed"
+
+.PHONY: test-cgnat
+test-cgnat: ## Test BIG-IP CGNAT/AFM/DNS integration
+	@bash infrastructure/scripts/test-cgnat.sh
 
 # ==============================================================================
 # 6G LAB

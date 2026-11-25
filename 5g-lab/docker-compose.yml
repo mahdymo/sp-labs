@@ -160,6 +160,8 @@ services:
 
   # ============================================================================
   # 5G Core — UPF (User Plane Function)
+  # N6 traffic exits here. When BIG-IP is active, `make connect-bigip` redirects
+  # the UPF default route via BIG-IP (10.1.10.x) for CGNAT/AFM/DNS processing.
   # ============================================================================
   upf:
     image: openverso/open5gs:2.7.0
@@ -362,12 +364,16 @@ services:
   # UERANSIM — UE (User Equipment Simulator)
   # The entrypoint expects "ue" as first arg, resolves gNB via env/DNS,
   # runs envsubst on /etc/ueransim/ue.yaml template, then exec nr-ue.
+  #
+  # Multi-UE: "-n 5" spawns 5 UEs with auto-incrementing IMSIs starting
+  # from the MSISDN value. Each UE gets its own uesimtunX interface.
+  # All UEs share the same K/OPc (must match MongoDB).
   # ============================================================================
   ue:
     image: openverso/ueransim:3.2.6
     container_name: ue
     restart: unless-stopped
-    command: ue
+    command: ue -n ${NUM_UES:-5}
     environment:
       - MCC=999
       - MNC=70
@@ -386,6 +392,103 @@ services:
     networks:
       mgmt:
         ipv4_address: 10.33.38.101
+    depends_on:
+      - gnb
+
+  # ============================================================================
+  # UERANSIM — Power User UE (high bandwidth profile)
+  # IMSI range: 999700000000021–025 (5 UEs, offset from base UE range)
+  # Registered in MongoDB with 5 Gbps DL / 2 Gbps UL QoS profile
+  # ============================================================================
+  ue-power:
+    image: openverso/ueransim:3.2.6
+    container_name: ue-power
+    restart: unless-stopped
+    command: ue -n 5
+    profiles: ["multi-ue"]
+    environment:
+      - MCC=999
+      - MNC=70
+      - MSISDN=0000000021
+      - KEY=465B5CE8B199B49FAA5F0A2EE238A6BC
+      - OP=E8ED289DEBA952E4283B54E88E6183CA
+      - OP_TYPE=OPC
+      - SST=1
+      - SD=0xFFFFFF
+      - APN=internet
+      - GNB_IP=10.33.38.100
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      mgmt:
+        ipv4_address: 10.33.38.102
+    depends_on:
+      - gnb
+
+  # ============================================================================
+  # UERANSIM — IoT Device UE (low bandwidth, infrequent, MIoT slice)
+  # IMSI range: 999700000000031–035
+  # Registered with 1 Mbps DL/UL, SST=1 (MIoT SST=3 needs NSSF config;
+  # using SST=1 here for compatibility — QoS differentiation via AMBR)
+  # ============================================================================
+  ue-iot:
+    image: openverso/ueransim:3.2.6
+    container_name: ue-iot
+    restart: unless-stopped
+    command: ue -n 5
+    profiles: ["multi-ue"]
+    environment:
+      - MCC=999
+      - MNC=70
+      - MSISDN=0000000031
+      - KEY=465B5CE8B199B49FAA5F0A2EE238A6BC
+      - OP=E8ED289DEBA952E4283B54E88E6183CA
+      - OP_TYPE=OPC
+      - SST=1
+      - SD=0xFFFFFF
+      - APN=internet
+      - GNB_IP=10.33.38.100
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      mgmt:
+        ipv4_address: 10.33.38.103
+    depends_on:
+      - gnb
+
+  # ============================================================================
+  # UERANSIM — Enterprise UE (business SLA profile)
+  # IMSI range: 999700000000041–045
+  # Registered with 2 Gbps DL / 1 Gbps UL, priority QoS
+  # ============================================================================
+  ue-enterprise:
+    image: openverso/ueransim:3.2.6
+    container_name: ue-enterprise
+    restart: unless-stopped
+    command: ue -n 5
+    profiles: ["multi-ue"]
+    environment:
+      - MCC=999
+      - MNC=70
+      - MSISDN=0000000041
+      - KEY=465B5CE8B199B49FAA5F0A2EE238A6BC
+      - OP=E8ED289DEBA952E4283B54E88E6183CA
+      - OP_TYPE=OPC
+      - SST=1
+      - SD=0xFFFFFF
+      - APN=internet
+      - GNB_IP=10.33.38.100
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    networks:
+      mgmt:
+        ipv4_address: 10.33.38.104
     depends_on:
       - gnb
 

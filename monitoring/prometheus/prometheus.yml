@@ -55,3 +55,25 @@ scrape_configs:
         labels:
           component: '5g-core'
           nf: 'upf'
+
+  # --------------------------------------------------------------------------
+  # BIG-IP Telemetry Streaming (CGNAT / AFM / DNS)
+  # --------------------------------------------------------------------------
+  # Requires F5 Telemetry Streaming extension configured with Prometheus
+  # pull consumer on BIG-IP. Enable this section after deploying BIG-IP.
+  # See: docs/LAB_GUIDE.md §19 — BIG-IP Integration
+  #
+  # - job_name: 'bigip-gi-lan'
+  #   scrape_interval: 30s
+  #   scrape_timeout: 15s
+  #   metrics_path: '/mgmt/shared/telemetry/pullconsumer/Prometheus_Pull'
+  #   basic_auth:
+  #     username: 'admin'
+  #     password: 'admin'       # Change to match your BIG-IP password
+  #   tls_config:
+  #     insecure_skip_verify: true
+  #   static_configs:
+  #     - targets: ['10.1.10.200:443']
+  #       labels:
+  #         component: 'bigip'
+  #         role: 'gi-lan'

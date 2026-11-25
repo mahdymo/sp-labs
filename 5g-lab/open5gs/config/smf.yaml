@@ -34,6 +34,10 @@ smf:
     - subnet: 10.45.0.1/16
       dnn: internet
     - subnet: 2001:db8:cafe::1/48
+  # DNS pushed to UEs during PDU session establishment.
+  # BIG-IP DNS: replace 8.8.8.8 with BIG-IP vs_dns VIP (e.g., 10.1.10.200)
+  # to route all UE DNS queries through BIG-IP for logging/filtering.
+  # Restart SMF + UEs after changing: make restart-5g
   dns:
     - 8.8.8.8
     - 8.8.4.4
