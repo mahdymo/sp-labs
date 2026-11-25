@@ -234,6 +234,11 @@ status: ## Show status of all lab containers
 # ==============================================================================
 .PHONY: portal
 portal: ## Regenerate the interactive architecture portal (docs/portal/index.html)
-	@echo -e "$(GREEN)[DOCS]$(NC) Generating architecture portal..."
-	@cd docs/portal && node build.js
-	@echo -e "$(GREEN)[DOCS]$(NC) Portal ready → docs/portal/index.html"
+	@if command -v node >/dev/null 2>&1; then \
+	  echo -e "$(GREEN)[DOCS]$(NC) Generating architecture portal..."; \
+	  cd docs/portal && node build.js; \
+	  echo -e "$(GREEN)[DOCS]$(NC) Portal ready → docs/portal/index.html"; \
+	else \
+	  echo -e "$(YELLOW)[DOCS]$(NC) node not found — install Node.js to regenerate the portal"; \
+	  echo -e "$(YELLOW)[DOCS]$(NC) The pre-built portal is still available at docs/portal/index.html"; \
+	fi
