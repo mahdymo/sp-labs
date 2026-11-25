@@ -84,3 +84,19 @@ services:
     networks:
       mgmt:
         ipv4_address: 10.33.38.202
+
+  # ============================================================================
+  # Architecture Portal — Interactive docs served via nginx
+  # ============================================================================
+  portal:
+    image: nginx:1.27-alpine
+    container_name: portal
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ../docs/portal/index.html:/usr/share/nginx/html/index.html:ro
+      - ../docs/portal/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      mgmt:
+        ipv4_address: 10.33.38.203

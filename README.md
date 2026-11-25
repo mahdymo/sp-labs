@@ -64,6 +64,7 @@ make test-6g    # 6G simulation environment check
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
+| **Architecture Portal** | `http://<host>:8080` | — |
 | Grafana | `http://<host>:3000` | admin / sp-labs-admin |
 | Prometheus | `http://<host>:9090` | — |
 | Open5GS WebUI | `http://<host>:9999` | admin / 1423 |

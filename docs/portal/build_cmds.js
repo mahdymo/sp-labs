@@ -3,6 +3,7 @@ a(`<div class="tc" id="tab-commands">
 <div class="card"><div class="ct">Quick Commands Reference</div>
 <table class="t"><thead><tr><th>Action</th><th>Command</th><th>Notes</th></tr></thead><tbody>
 <tr><td>Start all</td><td class="m">make up</td><td>Brings up 5G core + RAN + monitoring</td></tr>
+<tr><td>Start portal</td><td class="m">make deploy-portal</td><td>Serve this portal on :8080</td></tr>
 <tr><td>Stop all</td><td class="m">make down</td><td>Graceful shutdown</td></tr>
 <tr><td>View logs</td><td class="m">make logs</td><td>Follow all container logs</td></tr>
 <tr><td>UE status</td><td class="m">docker exec ue nr-cli imsi-999700000000001 -e status</td><td>Check registration/PDU state</td></tr>
@@ -23,6 +24,7 @@ a(`<div class="tc" id="tab-commands">
 
 <div class="card"><div class="ct">Web Interfaces</div>
 <table class="t"><thead><tr><th>Service</th><th>URL</th><th>Credentials</th></tr></thead><tbody>
+<tr><td style="color:var(--accent2)"><b>Architecture Portal</b></td><td class="m">http://&lt;host&gt;:8080</td><td>No auth</td></tr>
 <tr><td>Open5GS WebUI</td><td class="m">http://&lt;host&gt;:9999</td><td class="m">admin / 1423</td></tr>
 <tr><td>Grafana</td><td class="m">http://&lt;host&gt;:3000</td><td class="m">admin / grafana</td></tr>
 <tr><td>Prometheus</td><td class="m">http://&lt;host&gt;:9090</td><td>No auth</td></tr>

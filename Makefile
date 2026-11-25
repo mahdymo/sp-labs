@@ -242,3 +242,13 @@ portal: ## Regenerate the interactive architecture portal (docs/portal/index.htm
 	  echo -e "$(YELLOW)[DOCS]$(NC) node not found — install Node.js to regenerate the portal"; \
 	  echo -e "$(YELLOW)[DOCS]$(NC) The pre-built portal is still available at docs/portal/index.html"; \
 	fi
+
+.PHONY: deploy-portal
+deploy-portal: ensure-mgmt-network ## Serve architecture portal on http://<host>:8080
+	@echo -e "$(GREEN)[PORTAL]$(NC) Starting architecture portal on port 8080..."
+	docker compose -f monitoring/docker-compose.yml --env-file .env up -d portal
+	@echo -e "$(GREEN)[PORTAL]$(NC) Portal is UP → http://$$(hostname -I | awk '{print $$1}'):8080"
+
+.PHONY: stop-portal
+stop-portal: ## Stop the architecture portal
+	docker compose -f monitoring/docker-compose.yml --env-file .env stop portal
